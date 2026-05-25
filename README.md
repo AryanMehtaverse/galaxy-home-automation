@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AutoFlow — Workflow Manager
 
-## Getting Started
+Collaborative workflow management for home automation projects. Built with Next.js App Router, Tailwind CSS, Firebase Authentication, and Firestore realtime sync.
 
-First, run the development server:
+## Features
+
+- Dashboard with project stats and overdue count
+- Optional project deadline (not required at creation)
+- Dynamic hierarchical workflow with accordion UI
+- Workflow item types: checklist, text input, multi-select category (Lights)
+- Per-item status, notes, optional deadline, and progress tracking
+- Dependency rules (e.g. Programming blocked until Switch + Socket and IR + HUB + LCD are done)
+- Realtime Firestore sync
+- Sidebar navigation, light/dark theme, mobile responsive
+
+## Workflow structure
+
+| Item | Type |
+|------|------|
+| Advance Received | Checklist |
+| Lead Time | Text input (days) |
+| Lights | Multi-select category (COB, LED Strips, Panel, etc.) |
+| Backbox | Checklist |
+| Icon Colour | Text input |
+| Switch + Socket | Text input |
+| Curtains | Checklist |
+| IR + HUB + LCD | Checklist |
+| Programming | Checklist (blocked until dependencies complete) |
+
+Add new categories in `src/lib/workflow/definitions.ts` and dependencies in `src/lib/workflow/dependencies.ts`.
+
+## Getting started
+
+1. Enable **Email/Password** auth in Firebase Console
+2. Create Firestore database and deploy `firestore.rules`
+3. Copy `.env.example` to `.env.local` with your Firebase config
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── types/workflow.ts          # Workflow TypeScript types
+├── lib/workflow/
+│   ├── definitions.ts         # Catalog of nodes & light types (scalable)
+│   ├── factory.ts             # Build default workflow for new projects
+│   ├── dependencies.ts        # Block/unblock rules
+│   ├── progress.ts            # Progress calculation
+│   ├── normalize.ts           # Defaults & Firestore normalization
+│   └── mutations.ts           # Immutable workflow updates
+├── components/workflow/       # Accordion tree UI
+└── lib/firestore/projects.ts  # Firestore CRUD + realtime
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Data model
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Projects store a `workflow` array on the Firestore document. Legacy `stages` documents are migrated to the default template on read.

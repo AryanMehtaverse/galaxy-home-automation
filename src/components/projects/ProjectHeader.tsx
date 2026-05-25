@@ -1,0 +1,90 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import type { Project } from "@/types";
+import { Badge } from "@/components/ui/Badge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Button } from "@/components/ui/Button";
+import { STATUS_COLORS, PROJECT_STATUSES } from "@/lib/constants";
+import { formatDeadlineLabel, isOverdue } from "@/lib/utils/dates";
+import { DeleteProjectModal } from "./DeleteProjectModal";
+
+interface ProjectHeaderProps {
+  project: Project;
+}
+
+export function ProjectHeader({ project }: ProjectHeaderProps) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const overdue = isOverdue(project.deadline, project.status);
+  const statusLabel =
+    PROJECT_STATUSES.find((s) => s.value === project.status)?.label ??
+    project.status;
+
+  return (
+    <>
+      <div
+        className={`rounded-xl border p-6 ${
+          overdue
+            ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30"
+            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+        }`}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back to dashboard
+          </Link>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+          >
+            Delete project
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              {project.name}
+            </h1>
+            <p className="mt-1 text-zinc-500">{project.clientName}</p>
+          </div>
+          <Badge className={STATUS_COLORS[project.status]}>{statusLabel}</Badge>
+        </div>
+
+        <div className="mt-6">
+          <ProgressBar value={project.progress} />
+        </div>
+
+        <p
+          className={`mt-4 text-sm ${
+            overdue
+              ? "font-semibold text-red-600 dark:text-red-400"
+              : "text-zinc-600 dark:text-zinc-400"
+          }`}
+        >
+          {formatDeadlineLabel(project.deadline)}
+        </p>
+      </div>
+
+      <DeleteProjectModal
+        projectId={project.id}
+        projectName={project.name}
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+      />
+    </>
+  );
+}
