@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoFlow — Workflow Manager",
+  title: "Project Manager Tool",
   description:
     "Collaborative workflow management for home automation projects",
 };

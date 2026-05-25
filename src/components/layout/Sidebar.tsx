@@ -60,9 +60,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </div>
         <div>
           <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            AutoFlow
+            Project Manager Tool
           </p>
-          <p className="text-xs text-zinc-500">Workflow Manager</p>
+          <p className="text-xs text-zinc-500">Galaxy Home Automation LLP</p>
         </div>
       </div>
 
