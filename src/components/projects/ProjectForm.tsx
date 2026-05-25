@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { createProject } from "@/lib/firestore/projects";
+import { toProjectCreator } from "@/lib/auth/user";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import type { ProjectStatus } from "@/types";
 
@@ -35,7 +36,7 @@ export function ProjectForm() {
           ...(deadline ? { deadline } : {}),
           status,
         },
-        user.uid
+        toProjectCreator(user)
       );
       router.push(`/projects/${id}`);
     } catch (err) {

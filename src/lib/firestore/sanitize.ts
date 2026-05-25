@@ -16,7 +16,9 @@ const FIRESTORE_DEFAULTS: Record<string, unknown> = {
   progress: 0,
   name: "",
   clientName: "",
-  createdBy: "",
+  createdByUid: "",
+  createdByName: "",
+  createdByEmail: "",
   status: "planning",
 };
 

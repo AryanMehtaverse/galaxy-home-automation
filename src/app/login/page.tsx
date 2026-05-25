@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/providers/AuthProvider";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
           Galaxy Home Automation LLP
         </p>
       </div>
-      <LoginForm />
+      <GoogleSignInButton />
     </div>
   );
 }

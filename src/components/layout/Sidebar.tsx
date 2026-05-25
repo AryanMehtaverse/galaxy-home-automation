@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthContext } from "@/components/providers/AuthProvider";
-import { ThemeToggle } from "./ThemeToggle";
-import { Button } from "@/components/ui/Button";
+import { UserMenu } from "./UserMenu";
 
 const navItems = [
   {
@@ -43,7 +41,6 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuthContext();
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -89,17 +86,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
-        <div className="mb-3 flex items-center justify-between">
-          <ThemeToggle />
-          <span className="truncate text-xs text-zinc-500" title={user?.email ?? ""}>
-            {user?.email}
-          </span>
-        </div>
-        <Button variant="ghost" size="sm" className="w-full" onClick={() => logout()}>
-          Sign out
-        </Button>
-      </div>
+      <UserMenu />
     </aside>
   );
 }

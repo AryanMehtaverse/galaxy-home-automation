@@ -2,13 +2,12 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import type { User } from "firebase/auth";
+import type { AppUser } from "@/types/auth";
 
 interface AuthContextValue {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => ReturnType<typeof import("firebase/auth").signInWithEmailAndPassword>;
-  signUp: (email: string, password: string) => ReturnType<typeof import("firebase/auth").createUserWithEmailAndPassword>;
+  signInWithGoogle: () => Promise<AppUser>;
   logout: () => Promise<void>;
 }
 

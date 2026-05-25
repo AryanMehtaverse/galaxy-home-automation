@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Project, ProjectCreateInput } from "@/types";
+import type { ProjectCreator } from "@/types/auth";
 import type {
   WorkflowNode,
   WorkflowNodePatch,
@@ -68,9 +69,9 @@ export function subscribeToProject(
 
 export async function createProject(
   input: ProjectCreateInput,
-  userId: string
+  creator: ProjectCreator
 ): Promise<string> {
-  const document = buildFirestoreProjectDocument(input, userId);
+  const document = buildFirestoreProjectDocument(input, creator);
   const now = Timestamp.now();
 
   const docData = sanitizeFirestorePayload({
@@ -82,7 +83,9 @@ export async function createProject(
     progress: document.progress,
     status: document.status,
     workflow: document.workflow,
-    createdBy: document.createdBy,
+    createdByUid: document.createdByUid,
+    createdByName: document.createdByName,
+    createdByEmail: document.createdByEmail,
     createdAt: now,
     updatedAt: now,
   });

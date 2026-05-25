@@ -24,7 +24,11 @@ export interface Project {
   workflow: WorkflowNode[];
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
+  createdByUid: string;
+  createdByName: string;
+  createdByEmail: string;
+  /** @deprecated Use createdByUid — kept for legacy Firestore docs */
+  createdBy?: string;
 }
 
 export interface ProjectCreateInput {
@@ -34,7 +38,11 @@ export interface ProjectCreateInput {
   progress?: number;
   status?: ProjectStatus;
   workflow?: WorkflowNode[];
-  createdBy?: string;
+  createdByUid?: string;
+  createdByName?: string;
+  createdByEmail?: string;
 }
 
 export type ProjectInput = Omit<Project, "id" | "createdAt" | "updatedAt">;
+
+export type { AppUser, ProjectCreator } from "./auth";

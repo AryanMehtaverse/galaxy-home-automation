@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { STATUS_COLORS, PROJECT_STATUSES } from "@/lib/constants";
 import { formatDate, isOverdue } from "@/lib/utils/dates";
+import { CreatorInfo } from "./CreatorInfo";
 
 interface ProjectCardProps {
   project: Project;
@@ -38,22 +39,29 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <ProgressBar value={project.progress} size="sm" />
         </div>
 
-        <div className="mt-3 flex items-center justify-between text-xs">
-          <span
-            className={
-              overdue
-                ? "font-semibold text-red-600 dark:text-red-400"
-                : "text-zinc-500"
-            }
-          >
-            {overdue ? "Overdue · " : ""}
-            {project.deadline
-              ? `Due ${formatDate(project.deadline)}`
-              : "No deadline"}
-          </span>
-          <span className="text-zinc-400">
-            {project.workflow.length} workflow items
-          </span>
+        <div className="mt-3 space-y-1.5">
+          <CreatorInfo
+            createdByName={project.createdByName}
+            createdByEmail={project.createdByEmail}
+            compact
+          />
+          <div className="flex items-center justify-between text-xs">
+            <span
+              className={
+                overdue
+                  ? "font-semibold text-red-600 dark:text-red-400"
+                  : "text-zinc-500"
+              }
+            >
+              {overdue ? "Overdue · " : ""}
+              {project.deadline
+                ? `Due ${formatDate(project.deadline)}`
+                : "No deadline"}
+            </span>
+            <span className="text-zinc-400">
+              {project.workflow.length} workflow items
+            </span>
+          </div>
         </div>
       </Card>
     </Link>

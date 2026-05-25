@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { STATUS_COLORS, PROJECT_STATUSES } from "@/lib/constants";
 import { formatDeadlineLabel, isOverdue } from "@/lib/utils/dates";
 import { DeleteProjectModal } from "./DeleteProjectModal";
+import { CreatorInfo } from "./CreatorInfo";
 
 interface ProjectHeaderProps {
   project: Project;
@@ -68,15 +69,22 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
           <ProgressBar value={project.progress} />
         </div>
 
-        <p
-          className={`mt-4 text-sm ${
-            overdue
-              ? "font-semibold text-red-600 dark:text-red-400"
-              : "text-zinc-600 dark:text-zinc-400"
-          }`}
-        >
-          {formatDeadlineLabel(project.deadline)}
-        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <CreatorInfo
+            createdByName={project.createdByName}
+            createdByEmail={project.createdByEmail}
+            createdAt={project.createdAt}
+          />
+          <p
+            className={`text-sm ${
+              overdue
+                ? "font-semibold text-red-600 dark:text-red-400"
+                : "text-zinc-600 dark:text-zinc-400"
+            }`}
+          >
+            {formatDeadlineLabel(project.deadline)}
+          </p>
+        </div>
       </div>
 
       <DeleteProjectModal

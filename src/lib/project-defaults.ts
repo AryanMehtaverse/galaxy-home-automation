@@ -1,4 +1,5 @@
 import type { Project, ProjectCreateInput, ProjectStatus } from "@/types";
+import type { ProjectCreator } from "@/types/auth";
 import { normalizeWorkflow } from "@/lib/workflow/normalize";
 import { prepareWorkflowForFirestore } from "@/lib/workflow/storage";
 import { calculateWorkflowProgress } from "@/lib/workflow/progress";
@@ -12,7 +13,9 @@ export const PROJECT_FIELD_DEFAULTS = {
   clientName: "",
   progress: DEFAULT_PROJECT_PROGRESS,
   status: DEFAULT_PROJECT_STATUS,
-  createdBy: "",
+  createdByUid: "",
+  createdByName: "",
+  createdByEmail: "",
   workflow: [] as ReturnType<typeof normalizeWorkflow>,
 } as const;
 
@@ -24,7 +27,9 @@ export interface ProjectFirestoreDocument {
   progress: number;
   status: ProjectStatus;
   workflow: Record<string, unknown>[];
-  createdBy: string;
+  createdByUid: string;
+  createdByName: string;
+  createdByEmail: string;
 }
 
 function clampProgress(value: number): number {
@@ -75,17 +80,22 @@ export function normalizeProjectInput(
     progress,
     status: normalizeProjectStatus(input.status),
     workflow,
-    createdBy: input.createdBy ?? PROJECT_FIELD_DEFAULTS.createdBy,
+    createdByUid: input.createdByUid ?? PROJECT_FIELD_DEFAULTS.createdByUid,
+    createdByName: input.createdByName ?? PROJECT_FIELD_DEFAULTS.createdByName,
+    createdByEmail:
+      input.createdByEmail ?? PROJECT_FIELD_DEFAULTS.createdByEmail,
   };
 }
 
 export function buildFirestoreProjectDocument(
   input: ProjectCreateInput,
-  userId: string
+  creator: ProjectCreator
 ): ProjectFirestoreDocument {
   const normalized = normalizeProjectInput({
     ...input,
-    createdBy: userId,
+    createdByUid: creator.uid,
+    createdByName: creator.displayName,
+    createdByEmail: creator.email,
   });
 
   return sanitizeFirestorePayload({
@@ -95,7 +105,9 @@ export function buildFirestoreProjectDocument(
     progress: normalized.progress,
     status: normalized.status,
     workflow: prepareWorkflowForFirestore(normalized.workflow),
-    createdBy: normalized.createdBy,
+    createdByUid: normalized.createdByUid,
+    createdByName: normalized.createdByName,
+    createdByEmail: normalized.createdByEmail,
   });
 }
 
@@ -180,7 +192,18 @@ export function normalizeProjectFromFirestore(
     workflow,
     createdAt: toIso(data.createdAt, now),
     updatedAt: toIso(data.updatedAt, now),
-    createdBy: String(data.createdBy ?? PROJECT_FIELD_DEFAULTS.createdBy),
+    createdByUid: String(
+      data.createdByUid ?? data.createdBy ?? PROJECT_FIELD_DEFAULTS.createdByUid
+    ),
+    createdByName: String(
+      data.createdByName ?? PROJECT_FIELD_DEFAULTS.createdByName
+    ),
+    createdByEmail: String(
+      data.createdByEmail ?? PROJECT_FIELD_DEFAULTS.createdByEmail
+    ),
+    createdBy: String(
+      data.createdByUid ?? data.createdBy ?? PROJECT_FIELD_DEFAULTS.createdByUid
+    ),
   };
 }
 
@@ -194,9 +217,9 @@ export type ProjectUpdateInput = Partial<
 /** @deprecated Use buildFirestoreProjectDocument */
 export function buildFirestoreProjectFields(
   input: ProjectCreateInput,
-  userId: string
+  creator: ProjectCreator
 ) {
-  return buildFirestoreProjectDocument(input, userId);
+  return buildFirestoreProjectDocument(input, creator);
 }
 
 /** @deprecated Use buildFirestoreUpdateDocument */
