@@ -20,6 +20,11 @@ const FIRESTORE_DEFAULTS: Record<string, unknown> = {
   createdByName: "",
   createdByEmail: "",
   status: "planning",
+  address: "",
+  city: "",
+  landmark: "",
+  googleMapsLink: "",
+  clientPhone: "",
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

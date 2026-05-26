@@ -63,6 +63,28 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </span>
           </div>
         </div>
+
+        {(project.city || project.clientPhone) && (
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-zinc-150 pt-2.5 text-xs text-zinc-500 dark:border-zinc-800">
+            {project.city && (
+              <span className="flex items-center gap-1 min-w-0 max-w-full">
+                <svg className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="truncate">{project.city}</span>
+              </span>
+            )}
+            {project.clientPhone && (
+              <span className="flex items-center gap-1 min-w-0 max-w-full">
+                <svg className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.24.96l-1.35 1.35a11.047 11.047 0 004.8 4.8l1.35-1.35a1 1 0 01.96-.24l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span className="truncate">{project.clientPhone}</span>
+              </span>
+            )}
+          </div>
+        )}
       </Card>
     </Link>
   );

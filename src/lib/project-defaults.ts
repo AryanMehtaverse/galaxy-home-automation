@@ -17,6 +17,11 @@ export const PROJECT_FIELD_DEFAULTS = {
   createdByName: "",
   createdByEmail: "",
   workflow: [] as ReturnType<typeof normalizeWorkflow>,
+  address: "",
+  city: "",
+  landmark: "",
+  googleMapsLink: "",
+  clientPhone: "",
 } as const;
 
 /** Payload ready for Firestore after sanitization (no undefined). */
@@ -30,6 +35,11 @@ export interface ProjectFirestoreDocument {
   createdByUid: string;
   createdByName: string;
   createdByEmail: string;
+  address?: string;
+  city?: string;
+  landmark?: string;
+  googleMapsLink?: string;
+  clientPhone?: string;
 }
 
 function clampProgress(value: number): number {
@@ -84,6 +94,11 @@ export function normalizeProjectInput(
     createdByName: input.createdByName ?? PROJECT_FIELD_DEFAULTS.createdByName,
     createdByEmail:
       input.createdByEmail ?? PROJECT_FIELD_DEFAULTS.createdByEmail,
+    address: (input.address ?? PROJECT_FIELD_DEFAULTS.address).trim(),
+    city: (input.city ?? PROJECT_FIELD_DEFAULTS.city).trim(),
+    landmark: (input.landmark ?? PROJECT_FIELD_DEFAULTS.landmark).trim(),
+    googleMapsLink: (input.googleMapsLink ?? PROJECT_FIELD_DEFAULTS.googleMapsLink).trim(),
+    clientPhone: (input.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim(),
   };
 }
 
@@ -108,6 +123,11 @@ export function buildFirestoreProjectDocument(
     createdByUid: normalized.createdByUid,
     createdByName: normalized.createdByName,
     createdByEmail: normalized.createdByEmail,
+    address: normalized.address,
+    city: normalized.city,
+    landmark: normalized.landmark,
+    googleMapsLink: normalized.googleMapsLink,
+    clientPhone: normalized.clientPhone,
   });
 }
 
@@ -139,6 +159,21 @@ export function buildFirestoreUpdateDocument(
   }
   if (updates.progress !== undefined) {
     result.progress = clampProgress(updates.progress);
+  }
+  if (updates.address !== undefined) {
+    result.address = (updates.address ?? PROJECT_FIELD_DEFAULTS.address).trim();
+  }
+  if (updates.city !== undefined) {
+    result.city = (updates.city ?? PROJECT_FIELD_DEFAULTS.city).trim();
+  }
+  if (updates.landmark !== undefined) {
+    result.landmark = (updates.landmark ?? PROJECT_FIELD_DEFAULTS.landmark).trim();
+  }
+  if (updates.googleMapsLink !== undefined) {
+    result.googleMapsLink = (updates.googleMapsLink ?? PROJECT_FIELD_DEFAULTS.googleMapsLink).trim();
+  }
+  if (updates.clientPhone !== undefined) {
+    result.clientPhone = (updates.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim();
   }
 
   return sanitizeFirestorePayload(result);
@@ -204,13 +239,28 @@ export function normalizeProjectFromFirestore(
     createdBy: String(
       data.createdByUid ?? data.createdBy ?? PROJECT_FIELD_DEFAULTS.createdByUid
     ),
+    address: data.address ? String(data.address).trim() : "",
+    city: data.city ? String(data.city).trim() : "",
+    landmark: data.landmark ? String(data.landmark).trim() : "",
+    googleMapsLink: data.googleMapsLink ? String(data.googleMapsLink).trim() : "",
+    clientPhone: data.clientPhone ? String(data.clientPhone).trim() : "",
   };
 }
 
 export type ProjectUpdateInput = Partial<
   Pick<
     Project,
-    "name" | "clientName" | "deadline" | "status" | "workflow" | "progress"
+    | "name"
+    | "clientName"
+    | "deadline"
+    | "status"
+    | "workflow"
+    | "progress"
+    | "address"
+    | "city"
+    | "landmark"
+    | "googleMapsLink"
+    | "clientPhone"
   >
 >;
 

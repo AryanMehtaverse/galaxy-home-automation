@@ -86,6 +86,11 @@ export async function createProject(
     createdByUid: document.createdByUid,
     createdByName: document.createdByName,
     createdByEmail: document.createdByEmail,
+    address: document.address,
+    city: document.city,
+    landmark: document.landmark,
+    googleMapsLink: document.googleMapsLink,
+    clientPhone: document.clientPhone,
     createdAt: now,
     updatedAt: now,
   });
@@ -114,6 +119,11 @@ export async function updateProject(
   if (fields.progress !== undefined) payload.progress = fields.progress;
   if (fields.status !== undefined) payload.status = fields.status;
   if (fields.workflow !== undefined) payload.workflow = fields.workflow;
+  if (fields.address !== undefined) payload.address = fields.address;
+  if (fields.city !== undefined) payload.city = fields.city;
+  if (fields.landmark !== undefined) payload.landmark = fields.landmark;
+  if (fields.googleMapsLink !== undefined) payload.googleMapsLink = fields.googleMapsLink;
+  if (fields.clientPhone !== undefined) payload.clientPhone = fields.clientPhone;
 
   await updateDoc(doc(db, COLLECTION, id), payload);
 }
