@@ -46,15 +46,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
       <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-5 dark:border-zinc-800">
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-transparent">
           <Image
-            src="/logo.jpeg"
+            src="/Galaxy Logo no bg.jpeg"
             alt="Galaxy Home Automation"
             width={40}
             height={40}
             className="object-contain"
+            priority
           />
-          </div>
+        </div>
         <div>
           <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
             Project Manager Tool

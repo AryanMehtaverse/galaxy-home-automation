@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -31,15 +32,15 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white">
-          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-transparent">
+          <Image
+            src="/Galaxy Logo no bg.jpeg"
+            alt="Galaxy Home Automation"
+            width={64}
+            height={64}
+            className="object-contain"
+            priority
+          />
         </div>
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
           Project Manager

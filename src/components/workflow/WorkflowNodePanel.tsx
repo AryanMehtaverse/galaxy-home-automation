@@ -253,22 +253,24 @@ export function WorkflowNodePanel({
             onNodeUpdate={onNodeUpdate}
           />
 
-          {node.custom && (
+          {(node.custom || onDeleteCustomStep) && (
             <div className="mt-4 flex justify-end gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setIsEditOpen(true)}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-600 shadow-sm transition-all hover:bg-zinc-50 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                Edit Step
-              </button>
+              {node.custom && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(true)}
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-600 shadow-sm transition-all hover:bg-zinc-50 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  Edit Step
+                </button>
+              )}
               {onDeleteCustomStep && (
                 <button
                   type="button"
                   onClick={() => onDeleteCustomStep(node.id)}
                   className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 shadow-sm transition-all hover:bg-red-100 hover:text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-900/40"
                 >
-                  Delete Custom Step
+                  Delete Step
                 </button>
               )}
             </div>

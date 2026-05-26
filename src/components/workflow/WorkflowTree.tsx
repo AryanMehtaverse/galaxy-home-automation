@@ -217,7 +217,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                 )
               }
               onDeleteCustomStep={(nodeId) => {
-                if (window.confirm("Are you sure you want to delete this custom step?")) {
+                if (window.confirm("Are you sure you want to delete this step?")) {
                   deleteWorkflowCustomStep(
                     project.id,
                     project.workflow,
@@ -312,7 +312,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                   )
                 }
                 onDeleteCustomStep={(nodeId) => {
-                  if (window.confirm("Are you sure you want to delete this custom step?")) {
+                  if (window.confirm("Are you sure you want to delete this step?")) {
                     deleteWorkflowCustomStep(
                       project.id,
                       project.workflow,
