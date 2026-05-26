@@ -34,6 +34,7 @@ export interface Project {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  startDate: string;
 }
 
 export interface ProjectCreateInput {
@@ -51,6 +52,7 @@ export interface ProjectCreateInput {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  startDate: string;
 }
 
 export type ProjectInput = Omit<Project, "id" | "createdAt" | "updatedAt">;

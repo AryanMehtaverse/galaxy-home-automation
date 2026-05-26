@@ -91,6 +91,7 @@ export async function createProject(
     landmark: document.landmark,
     googleMapsLink: document.googleMapsLink,
     clientPhone: document.clientPhone,
+    startDate: document.startDate,
     createdAt: now,
     updatedAt: now,
   });
@@ -124,6 +125,8 @@ export async function updateProject(
   if (fields.landmark !== undefined) payload.landmark = fields.landmark;
   if (fields.googleMapsLink !== undefined) payload.googleMapsLink = fields.googleMapsLink;
   if (fields.clientPhone !== undefined) payload.clientPhone = fields.clientPhone;
+
+  if (fields.startDate !== undefined) payload.startDate = fields.startDate;
 
   await updateDoc(doc(db, COLLECTION, id), payload);
 }

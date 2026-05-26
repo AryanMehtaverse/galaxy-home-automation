@@ -22,6 +22,7 @@ export const PROJECT_FIELD_DEFAULTS = {
   landmark: "",
   googleMapsLink: "",
   clientPhone: "",
+  startDate: "",
 } as const;
 
 /** Payload ready for Firestore after sanitization (no undefined). */
@@ -40,6 +41,7 @@ export interface ProjectFirestoreDocument {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  startDate: string;
 }
 
 function clampProgress(value: number): number {
@@ -83,6 +85,13 @@ export function normalizeProjectInput(
       ? clampProgress(input.progress)
       : calculateWorkflowProgress(workflow);
 
+  const parsedStartDate = input.startDate?.trim()
+    ? new Date(input.startDate)
+    : new Date();
+  const startDate = Number.isNaN(parsedStartDate.getTime())
+    ? new Date().toISOString()
+    : parsedStartDate.toISOString();
+
   return {
     name: (input.name ?? PROJECT_FIELD_DEFAULTS.name).trim(),
     clientName: (input.clientName ?? PROJECT_FIELD_DEFAULTS.clientName).trim(),
@@ -99,6 +108,7 @@ export function normalizeProjectInput(
     landmark: (input.landmark ?? PROJECT_FIELD_DEFAULTS.landmark).trim(),
     googleMapsLink: (input.googleMapsLink ?? PROJECT_FIELD_DEFAULTS.googleMapsLink).trim(),
     clientPhone: (input.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim(),
+    startDate,
   };
 }
 
@@ -128,6 +138,7 @@ export function buildFirestoreProjectDocument(
     landmark: normalized.landmark,
     googleMapsLink: normalized.googleMapsLink,
     clientPhone: normalized.clientPhone,
+    startDate: normalized.startDate,
   });
 }
 
@@ -175,6 +186,12 @@ export function buildFirestoreUpdateDocument(
   if (updates.clientPhone !== undefined) {
     result.clientPhone = (updates.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim();
   }
+  if (updates.startDate !== undefined) {
+    const parsedStartDate = updates.startDate ? new Date(updates.startDate) : new Date();
+    result.startDate = Number.isNaN(parsedStartDate.getTime())
+      ? new Date().toISOString()
+      : parsedStartDate.toISOString();
+  }
 
   return sanitizeFirestorePayload(result);
 }
@@ -215,6 +232,9 @@ export function normalizeProjectFromFirestore(
     deadline = iso || undefined;
   }
 
+  const startDateRaw = data.startDate ?? data.createdAt;
+  const startDate = startDateRaw ? toIso(startDateRaw, now) : now;
+
   return {
     id,
     name: String(data.name ?? PROJECT_FIELD_DEFAULTS.name).trim(),
@@ -244,6 +264,7 @@ export function normalizeProjectFromFirestore(
     landmark: data.landmark ? String(data.landmark).trim() : "",
     googleMapsLink: data.googleMapsLink ? String(data.googleMapsLink).trim() : "",
     clientPhone: data.clientPhone ? String(data.clientPhone).trim() : "",
+    startDate,
   };
 }
 
@@ -261,6 +282,7 @@ export type ProjectUpdateInput = Partial<
     | "landmark"
     | "googleMapsLink"
     | "clientPhone"
+    | "startDate"
   >
 >;
 

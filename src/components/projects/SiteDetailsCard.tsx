@@ -27,6 +27,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   const [landmark, setLandmark] = useState(project.landmark ?? "");
   const [googleMapsLink, setGoogleMapsLink] = useState(project.googleMapsLink ?? "");
   const [clientPhone, setClientPhone] = useState(project.clientPhone ?? "");
+  const [startDate, setStartDate] = useState(project.startDate ?? "");
 
   // Sync state with project updates from Firestore subscription
   useEffect(() => {
@@ -39,6 +40,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setLandmark(project.landmark ?? "");
     setGoogleMapsLink(project.googleMapsLink ?? "");
     setClientPhone(project.clientPhone ?? "");
+    setStartDate(project.startDate ?? "");
   }, [project]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -57,6 +59,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
         landmark,
         googleMapsLink,
         clientPhone,
+        startDate: startDate,
       });
       setIsEditing(false);
     } catch (err) {
@@ -107,7 +110,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
               Project Details
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+              <div className="sm:col-span-2">
                 <Input
                   label="Project Name"
                   value={name}
@@ -115,7 +118,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                   required
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Input
                   label="Client Name"
                   value={clientName}
@@ -123,7 +126,16 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                   required
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
+                <Input
+                  label="Start Date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="sm:col-span-2">
                 <Input
                   label="Deadline"
                   type="date"
@@ -131,7 +143,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                   onChange={(e) => setDeadline(e.target.value)}
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Select
                   label="Status"
                   value={status}
@@ -238,6 +250,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
           </span>
         </Button>
       </div>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Start Date: {project.startDate ? new Date(project.startDate).toLocaleDateString() : "—"}</p>
 
       {!hasSiteDetails ? (
         <div className="rounded-lg border border-dashed border-zinc-200 p-4 text-center dark:border-zinc-800">

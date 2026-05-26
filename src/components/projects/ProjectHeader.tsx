@@ -75,6 +75,9 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             createdByEmail={project.createdByEmail}
             createdAt={project.createdAt}
           />
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Started: {new Date(project.startDate).toLocaleDateString()}
+          </p>
           <p
             className={`text-sm ${
               overdue

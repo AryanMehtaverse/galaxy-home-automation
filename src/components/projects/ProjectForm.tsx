@@ -12,14 +12,17 @@ import { PROJECT_STATUSES } from "@/lib/constants";
 import type { ProjectStatus } from "@/types";
 
 export function ProjectForm() {
+
   const [name, setName] = useState("");
   const [clientName, setClientName] = useState("");
+
   const [deadline, setDeadline] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("planning");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [landmark, setLandmark] = useState("");
   const [googleMapsLink, setGoogleMapsLink] = useState("");
+  const [startDate, setStartDate] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -39,6 +42,7 @@ export function ProjectForm() {
           name,
           clientName,
           ...(deadline ? { deadline } : {}),
+          startDate,
           status,
           address,
           city,
@@ -85,13 +89,22 @@ export function ProjectForm() {
           </div>
           <div>
             <Input
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Input
               label="Deadline (optional)"
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
             />
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <Select
               label="Status"
               value={status}

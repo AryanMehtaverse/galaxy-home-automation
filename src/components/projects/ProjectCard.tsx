@@ -37,6 +37,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         <div className="mt-4">
           <ProgressBar value={project.progress} size="sm" />
+          <p className="mt-2 text-xs text-zinc-500">Start {formatDate(project.startDate)}</p>
         </div>
 
         <div className="mt-3 space-y-1.5">

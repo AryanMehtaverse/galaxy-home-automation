@@ -25,6 +25,7 @@ const FIRESTORE_DEFAULTS: Record<string, unknown> = {
   landmark: "",
   googleMapsLink: "",
   clientPhone: "",
+  startDate: "",
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
