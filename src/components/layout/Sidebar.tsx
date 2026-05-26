@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserMenu } from "./UserMenu";
 
@@ -45,16 +46,15 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
       <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-5 dark:border-zinc-800">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
-        </div>
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white">
+          <Image
+            src="/logo.jpeg"
+            alt="Galaxy Home Automation"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+          </div>
         <div>
           <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
             Project Manager Tool
