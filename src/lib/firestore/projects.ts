@@ -95,6 +95,8 @@ export async function createProject(
     googleMapsLink: document.googleMapsLink,
     clientPhone: document.clientPhone,
     startDate: document.startDate,
+    siteManagerName: document.siteManagerName ?? "",
+    siteContacts: document.siteContacts ?? [],
     createdAt: now,
     updatedAt: now,
   });
@@ -114,6 +116,7 @@ export async function updateProject(
 
   if (fields.name !== undefined) payload.name = fields.name;
   if (fields.clientName !== undefined) payload.clientName = fields.clientName;
+  if (fields.siteManagerName !== undefined) payload.siteManagerName = fields.siteManagerName;
   if (fields.deadline !== undefined) {
     payload.deadline =
       fields.deadline === null

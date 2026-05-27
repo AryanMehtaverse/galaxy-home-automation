@@ -23,6 +23,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   // Edit form states
   const [name, setName] = useState(project.name);
   const [clientName, setClientName] = useState(project.clientName);
+  const [siteManagerName, setSiteManagerName] = useState(project.siteManagerName ?? "");
   const [deadline, setDeadline] = useState(project.deadline ? project.deadline.split("T")[0] : "");
   const [status, setStatus] = useState<ProjectStatus>(project.status);
   const [address, setAddress] = useState(project.address ?? "");
@@ -39,6 +40,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   useEffect(() => {
     setName(project.name);
     setClientName(project.clientName);
+    setSiteManagerName(project.siteManagerName ?? "");
     setDeadline(project.deadline ? project.deadline.split("T")[0] : "");
     setStatus(project.status);
     setAddress(project.address ?? "");
@@ -55,10 +57,34 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setLoading(true);
     setError("");
 
+    // Validate site manager
+    if (!siteManagerName.trim()) {
+      setError("Site Manager name is required.");
+      setLoading(false);
+      return;
+    }
+
+    // Validate contacts
+    if (contacts.length < 2) {
+      setError("At least 2 site contacts are required.");
+      setLoading(false);
+      return;
+    }
+
+    for (let i = 0; i < contacts.length; i++) {
+      const c = contacts[i];
+      if (!c.designation.trim() || !c.phone.trim()) {
+        setError(`Contact #${i + 1} must have both Designation and Phone number filled.`);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       await updateProject(project.id, {
         name,
         clientName,
+        siteManagerName,
         deadline: deadline,
         status,
         address,
@@ -80,6 +106,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   const handleCancel = () => {
     setName(project.name);
     setClientName(project.clientName);
+    setSiteManagerName(project.siteManagerName ?? "");
     setDeadline(project.deadline ? project.deadline.split("T")[0] : "");
     setStatus(project.status);
     setAddress(project.address ?? "");
@@ -133,6 +160,15 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                   label="Client Name (optional)"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Input
+                  label="Site Manager"
+                  value={siteManagerName}
+                  onChange={(e) => setSiteManagerName(e.target.value)}
+                  placeholder="e.g. Raj Patel"
+                  required
                 />
               </div>
               <div className="sm:col-span-2">
@@ -227,18 +263,20 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                 <div key={index} className="rounded-xl border border-zinc-150 bg-zinc-50/50 p-4 dark:border-zinc-800 space-y-4">
                   <div className="flex items-center justify-between border-b border-zinc-150 pb-2 dark:border-zinc-800">
                     <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                      Contact #{index + 1}
+                      Contact #{index + 1} {index < 2 && <span className="text-red-500 font-normal text-[10px] lowercase">(required)</span>}
                     </span>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => {
-                        setContacts(contacts.filter((_, i) => i !== index));
-                      }}
-                    >
-                      Remove
-                    </Button>
+                    {contacts.length > 2 && (
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          setContacts(contacts.filter((_, i) => i !== index));
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    )}
                   </div>
                   
                   <div className="grid gap-4 sm:grid-cols-3">

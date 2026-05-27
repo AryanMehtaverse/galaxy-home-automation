@@ -43,11 +43,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         <div className="mt-3 space-y-1.5">
-          <CreatorInfo
-            createdByName={project.createdByName}
-            createdByEmail={project.createdByEmail}
-            compact
-          />
+          <div className="text-xs text-zinc-500 font-medium">
+            Site Manager: <span className="text-zinc-700 dark:text-zinc-300 font-semibold">{project.siteManagerName || "Unassigned"}</span>
+          </div>
           <div className="flex items-center justify-between text-xs">
             <span
               className={

@@ -18,6 +18,7 @@ export interface Project {
   id: string;
   name: string;
   clientName: string;
+  siteManagerName?: string;
   deadline?: string;
   progress: number;
   status: ProjectStatus;
@@ -45,6 +46,7 @@ export interface Project {
 export interface ProjectCreateInput {
   name?: string;
   clientName?: string;
+  siteManagerName?: string;
   deadline?: string;
   progress?: number;
   status?: ProjectStatus;

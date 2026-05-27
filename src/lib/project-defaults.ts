@@ -11,6 +11,7 @@ export const DEFAULT_PROJECT_PROGRESS = 0;
 export const PROJECT_FIELD_DEFAULTS = {
   name: "",
   clientName: "",
+  siteManagerName: "",
   progress: DEFAULT_PROJECT_PROGRESS,
   status: DEFAULT_PROJECT_STATUS,
   createdByUid: "",
@@ -30,6 +31,7 @@ export const PROJECT_FIELD_DEFAULTS = {
 export interface ProjectFirestoreDocument {
   name: string;
   clientName: string;
+  siteManagerName?: string;
   deadline: ReturnType<typeof sanitizeDeadlineForFirestore>;
   progress: number;
   status: ProjectStatus;
@@ -97,6 +99,7 @@ export function normalizeProjectInput(
   return {
     name: (input.name ?? PROJECT_FIELD_DEFAULTS.name).trim(),
     clientName: (input.clientName ?? PROJECT_FIELD_DEFAULTS.clientName).trim(),
+    siteManagerName: (input.siteManagerName ?? PROJECT_FIELD_DEFAULTS.siteManagerName).trim(),
     deadline: parseOptionalDeadline(input.deadline),
     progress,
     status: normalizeProjectStatus(input.status),
@@ -129,6 +132,7 @@ export function buildFirestoreProjectDocument(
   return sanitizeFirestorePayload({
     name: normalized.name,
     clientName: normalized.clientName,
+    siteManagerName: normalized.siteManagerName,
     deadline: sanitizeDeadlineForFirestore(normalized.deadline),
     progress: normalized.progress,
     status: normalized.status,
@@ -157,6 +161,11 @@ export function buildFirestoreUpdateDocument(
   if (updates.clientName !== undefined) {
     result.clientName = (
       updates.clientName ?? PROJECT_FIELD_DEFAULTS.clientName
+    ).trim();
+  }
+  if (updates.siteManagerName !== undefined) {
+    result.siteManagerName = (
+      updates.siteManagerName ?? PROJECT_FIELD_DEFAULTS.siteManagerName
     ).trim();
   }
   if (updates.deadline !== undefined) {
@@ -248,6 +257,9 @@ export function normalizeProjectFromFirestore(
     clientName: String(
       data.clientName ?? PROJECT_FIELD_DEFAULTS.clientName
     ).trim(),
+    siteManagerName: data.siteManagerName
+      ? String(data.siteManagerName).trim()
+      : "",
     deadline,
     progress,
     status: normalizeProjectStatus(data.status as ProjectStatus | undefined),
@@ -283,6 +295,7 @@ export type ProjectUpdateInput = Partial<
     Project,
     | "name"
     | "clientName"
+    | "siteManagerName"
     | "deadline"
     | "status"
     | "workflow"
