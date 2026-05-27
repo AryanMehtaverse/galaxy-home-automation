@@ -17,6 +17,7 @@ import type { ProjectCreator } from "@/types/auth";
 import type {
   WorkflowNode,
   WorkflowNodePatch,
+  ChecklistWorkflowNode,
 } from "@/types/workflow";
 import {
   buildFirestoreProjectDocument,
@@ -37,6 +38,7 @@ import {
 } from "@/lib/workflow/mutations";
 import { reconcileWorkflow } from "@/lib/workflow/pipeline";
 import { calculateWorkflowProgress } from "@/lib/workflow/progress";
+import { writeAuditLog } from "./audit";
 
 const COLLECTION = "projects";
 
@@ -102,6 +104,7 @@ export async function createProject(
   });
 
   const docRef = await addDoc(collection(db, COLLECTION), docData);
+  await writeAuditLog(docRef.id, "create_project", `Created project "${document.name}"`);
   return docRef.id;
 }
 
@@ -136,6 +139,11 @@ export async function updateProject(
   if (fields.siteContacts !== undefined) payload.siteContacts = fields.siteContacts;
 
   await updateDoc(doc(db, COLLECTION, id), payload);
+
+  // Only log as project details update if workflow changes are not included
+  if (updates.workflow === undefined) {
+    await writeAuditLog(id, "update_project", "Updated project details");
+  }
 }
 
 async function saveWorkflow(
@@ -170,8 +178,19 @@ export async function toggleWorkflowTask(
   taskId: string,
   projectStatus: Project["status"]
 ): Promise<void> {
+  const node = workflow.find(n => n.id === nodeId);
+  const stepTitle = node ? node.title : "unknown step";
+  const task = (node && node.type === "checklist")
+    ? (node as ChecklistWorkflowNode).tasks.find(t => t.id === taskId)
+    : undefined;
+  const taskTitle = task ? task.title : "unknown task";
+  const wasCompleted = task ? task.completed : false;
+  const actionType = wasCompleted ? "incomplete_task" : "complete_task";
+  const description = `${wasCompleted ? "Marked incomplete" : "Completed"} task "${taskTitle}" in step "${stepTitle}"`;
+
   const updated = applyWorkflowTaskToggle(workflow, nodeId, taskId);
   await saveWorkflow(projectId, updated, projectStatus);
+  await writeAuditLog(projectId, actionType, description, stepTitle);
 }
 
 export async function toggleWorkflowStep(
@@ -180,8 +199,15 @@ export async function toggleWorkflowStep(
   nodeId: string,
   projectStatus: Project["status"]
 ): Promise<void> {
+  const node = workflow.find(n => n.id === nodeId);
+  const stepTitle = node ? node.title : "unknown step";
+  const wasCompleted = node ? node.completed : false;
+  const actionType = wasCompleted ? "incomplete_step" : "complete_step";
+  const description = `${wasCompleted ? "Marked incomplete" : "Completed"} step "${stepTitle}"`;
+
   const updated = applyWorkflowStepToggle(workflow, nodeId);
   await saveWorkflow(projectId, updated, projectStatus);
+  await writeAuditLog(projectId, actionType, description, stepTitle);
 }
 
 export async function toggleWorkflowLightCategory(
@@ -209,6 +235,7 @@ export async function addWorkflowCustomStep(
 ): Promise<void> {
   const updated = addCustomStep(workflow, insertAfterNodeId, step);
   await saveWorkflow(projectId, updated, projectStatus);
+  await writeAuditLog(projectId, "add_step", `Added custom step "${step.title}"`, step.title);
 }
 
 export async function deleteWorkflowCustomStep(
@@ -217,8 +244,12 @@ export async function deleteWorkflowCustomStep(
   nodeId: string,
   projectStatus: Project["status"]
 ): Promise<void> {
+  const node = workflow.find(n => n.id === nodeId);
+  const stepTitle = node ? node.title : "unknown step";
+
   const updated = deleteCustomStep(workflow, nodeId);
   await saveWorkflow(projectId, updated, projectStatus);
+  await writeAuditLog(projectId, "delete_step", `Deleted step "${stepTitle}"`, stepTitle);
 }
 
 export async function reorderWorkflowSteps(
@@ -233,5 +264,6 @@ export async function reorderWorkflowSteps(
 }
 
 export async function deleteProject(id: string): Promise<void> {
+  await writeAuditLog(id, "delete_project", `Deleted project`);
   await deleteDoc(doc(db, COLLECTION, id));
 }

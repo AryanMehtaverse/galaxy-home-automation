@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserMenu } from "./UserMenu";
+import { useAuthContext } from "@/components/providers/AuthProvider";
+import { canViewActivityLogs } from "@/lib/auth/permissions";
 
 const navItems = [
   {
@@ -34,6 +36,20 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    href: "/dashboard/activity-logs",
+    label: "Activity Logs",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+        />
+      </svg>
+    ),
+  },
 ];
 
 interface SidebarProps {
@@ -42,6 +58,14 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuthContext();
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.href === "/dashboard/activity-logs") {
+      return canViewActivityLogs(user);
+    }
+    return true;
+  });
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -65,7 +89,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const active =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));

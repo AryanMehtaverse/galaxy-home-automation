@@ -73,3 +73,8 @@ export function canManageUsers(user: AppUser | null | undefined): boolean {
   if (!user || user.active === false) return false;
   return user.role === "admin";
 }
+
+export function canViewActivityLogs(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner";
+}
