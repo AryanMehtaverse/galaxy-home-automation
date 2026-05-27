@@ -30,7 +30,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <h3 className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
               {project.name}
             </h3>
-            <p className="mt-0.5 text-sm text-zinc-500">{project.clientName}</p>
+            {project.clientName && project.clientName.trim() && (
+              <p className="mt-0.5 text-sm text-zinc-500">{project.clientName}</p>
+            )}
           </div>
           <Badge className={STATUS_COLORS[project.status]}>{statusLabel}</Badge>
         </div>

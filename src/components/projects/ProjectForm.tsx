@@ -80,11 +80,10 @@ export function ProjectForm() {
           </div>
           <div className="sm:col-span-2">
             <Input
-              label="Client Name"
+              label="Client Name (optional)"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
               placeholder="e.g. John Smith"
-              required
             />
           </div>
           <div>

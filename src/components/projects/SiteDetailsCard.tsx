@@ -130,10 +130,9 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
               </div>
               <div className="sm:col-span-2">
                 <Input
-                  label="Client Name"
+                  label="Client Name (optional)"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  required
                 />
               </div>
               <div className="sm:col-span-2">
@@ -285,7 +284,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                 size="sm"
                 className="w-full flex items-center justify-center gap-1 mt-2 font-medium"
                 onClick={() => {
-                  setContacts([...contacts, { designation: "Architect", name: "", phone: "" }]);
+                  setContacts([...contacts, { designation: "", name: "", phone: "" }]);
                 }}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

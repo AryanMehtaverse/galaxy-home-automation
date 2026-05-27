@@ -67,7 +67,9 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               {project.name}
             </h1>
-            <p className="mt-1 text-zinc-500">{project.clientName}</p>
+            {project.clientName && project.clientName.trim() && (
+              <p className="mt-1 text-zinc-500">{project.clientName}</p>
+            )}
           </div>
           <Badge className={STATUS_COLORS[project.status]}>{statusLabel}</Badge>
         </div>
