@@ -7,33 +7,51 @@ import { DashboardStats } from "@/components/projects/DashboardStats";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
+import { isOverdue } from "@/lib/utils/dates";
 
 export default function DashboardPage() {
   const { projects, loading } = useProjects();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const activeProjects = projects.filter((p) => !p.archived);
-  const archivedProjects = projects.filter((p) => p.archived);
-
-  const tabProjects = projects.filter((p) => {
-    if (activeTab === "archived") return p.archived;
-    return !p.archived;
-  });
-
-  const filteredProjects = tabProjects.filter((project) => {
+  const filteredProjects = projects.filter((project) => {
+    // 1. Search Query filter
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
+    if (query) {
+      const match =
+        project.name.toLowerCase().includes(query) ||
+        project.clientName.toLowerCase().includes(query) ||
+        (project.address && project.address.toLowerCase().includes(query)) ||
+        (project.city && project.city.toLowerCase().includes(query)) ||
+        (project.landmark && project.landmark.toLowerCase().includes(query)) ||
+        (project.clientPhone && project.clientPhone.toLowerCase().includes(query));
+      if (!match) return false;
+    }
 
-    return (
-      project.name.toLowerCase().includes(query) ||
-      project.clientName.toLowerCase().includes(query) ||
-      (project.address && project.address.toLowerCase().includes(query)) ||
-      (project.city && project.city.toLowerCase().includes(query)) ||
-      (project.landmark && project.landmark.toLowerCase().includes(query)) ||
-      (project.clientPhone && project.clientPhone.toLowerCase().includes(query))
-    );
+    // 2. Status Card filter
+    if (activeFilter === "planning") {
+      return project.status === "planning" && !isOverdue(project.deadline, project.status);
+    }
+    if (activeFilter === "in_progress") {
+      return project.status === "in_progress" && !isOverdue(project.deadline, project.status);
+    }
+    if (activeFilter === "completed") {
+      return project.status === "completed";
+    }
+    if (activeFilter === "overdue") {
+      return isOverdue(project.deadline, project.status);
+    }
+
+    return true; // null or total
   });
+
+  const getFilterLabel = () => {
+    if (activeFilter === "planning") return "Planning";
+    if (activeFilter === "in_progress") return "In Progress";
+    if (activeFilter === "completed") return "Completed";
+    if (activeFilter === "overdue") return "Overdue";
+    return "";
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -57,45 +75,38 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <DashboardStats projects={activeProjects} />
+          <DashboardStats
+            projects={projects}
+            activeFilter={activeFilter}
+            onCardClick={setActiveFilter}
+          />
           
           <div className="space-y-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setActiveTab("active");
-                    setSearchQuery("");
-                  }}
-                  className={`pb-2.5 text-sm font-semibold border-b-2 px-1 transition-colors ${
-                    activeTab === "active"
-                      ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
-                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
-                  }`}
-                >
-                  Active Projects ({activeProjects.length})
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("archived");
-                    setSearchQuery("");
-                  }}
-                  className={`pb-2.5 text-sm font-semibold border-b-2 px-1 transition-colors ${
-                    activeTab === "archived"
-                      ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
-                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
-                  }`}
-                >
-                  Archived Projects ({archivedProjects.length})
-                </button>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  <span>Projects</span>
+                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    {filteredProjects.length}
+                  </span>
+                  {activeFilter && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                      <span>·</span>
+                      <span>Filtered by {getFilterLabel()}</span>
+                      <button
+                        onClick={() => setActiveFilter(null)}
+                        className="ml-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-0.5"
+                        title="Clear filter"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
+                </h2>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {activeTab === "active" ? "Active Projects" : "Archived Projects"}{" "}
-                {tabProjects.length > 0 && `(${filteredProjects.length})`}
-              </h2>
               {projects.length > 0 && (
                 <div className="relative w-full max-w-md">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -124,23 +135,35 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {projects.length > 0 && filteredProjects.length === 0 ? (
+            {filteredProjects.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
                 <svg className="mx-auto h-12 w-12 text-zinc-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <h3 className="mt-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">No results found</h3>
                 <p className="mt-1 text-xs text-zinc-500 max-w-xs">
-                  We couldn&apos;t find any projects matching &ldquo;{searchQuery}&rdquo;. Try another search.
+                  We couldn&apos;t find any projects matching your filters or search query. Try clearing them.
                 </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setSearchQuery("")}
-                >
-                  Clear Search
-                </Button>
+                <div className="mt-4 flex gap-2">
+                  {searchQuery && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                  {activeFilter && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setActiveFilter(null)}
+                    >
+                      Clear Status Filter
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <ProjectList projects={filteredProjects} />

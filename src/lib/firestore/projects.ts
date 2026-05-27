@@ -282,31 +282,6 @@ export async function permanentlyDeleteProject(id: string): Promise<void> {
   await deleteDoc(doc(db, COLLECTION, id));
 }
 
-export async function archiveProject(id: string): Promise<void> {
-  const currentUser = auth.currentUser;
-  const archivedByName = currentUser ? (currentUser.displayName || currentUser.email || "Unknown User") : "Unknown User";
-
-  await updateDoc(doc(db, COLLECTION, id), {
-    archived: true,
-    archivedAt: Timestamp.now(),
-    archivedBy: archivedByName,
-    updatedAt: Timestamp.now()
-  });
-
-  await writeAuditLog(id, "archive_project", `Project archived`);
-}
-
-export async function restoreFromArchive(id: string): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), {
-    archived: false,
-    archivedAt: deleteField(),
-    archivedBy: deleteField(),
-    updatedAt: Timestamp.now()
-  });
-
-  await writeAuditLog(id, "restore_archive_project", `Project restored from archive`);
-}
-
 export async function restoreFromRecycleBin(id: string): Promise<void> {
   await updateDoc(doc(db, COLLECTION, id), {
     deleted: false,

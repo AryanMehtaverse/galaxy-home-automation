@@ -41,9 +41,6 @@ export interface Project {
     name: string;
     phone: string;
   }[];
-  archived?: boolean;
-  archivedAt?: string;
-  archivedBy?: string;
   deleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;
