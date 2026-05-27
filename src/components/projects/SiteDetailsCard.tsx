@@ -31,6 +31,9 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   const [googleMapsLink, setGoogleMapsLink] = useState(project.googleMapsLink ?? "");
   const [clientPhone, setClientPhone] = useState(project.clientPhone ?? "");
   const [startDate, setStartDate] = useState(project.startDate ? project.startDate.split("T")[0] : "");
+  const [contacts, setContacts] = useState<{ designation: string; name: string; phone: string }[]>(
+    project.siteContacts ?? []
+  );
 
   // Sync state with project updates from Firestore subscription
   useEffect(() => {
@@ -44,6 +47,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setGoogleMapsLink(project.googleMapsLink ?? "");
     setClientPhone(project.clientPhone ?? "");
     setStartDate(project.startDate ? project.startDate.split("T")[0] : "");
+    setContacts(project.siteContacts ?? []);
   }, [project]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -63,6 +67,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
         googleMapsLink,
         clientPhone,
         startDate: startDate,
+        siteContacts: contacts,
       });
       setIsEditing(false);
     } catch (err) {
@@ -82,6 +87,8 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setLandmark(project.landmark ?? "");
     setGoogleMapsLink(project.googleMapsLink ?? "");
     setClientPhone(project.clientPhone ?? "");
+    setStartDate(project.startDate ? project.startDate.split("T")[0] : "");
+    setContacts(project.siteContacts ?? []);
     setError("");
     setIsEditing(false);
   };
@@ -206,6 +213,86 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                   placeholder="e.g. https://maps.app.goo.gl/..."
                 />
               </div>
+            </div>
+          </div>
+
+          <hr className="border-zinc-150 dark:border-zinc-800" />
+
+          <div className="space-y-4">
+            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+              Site Contacts
+            </h3>
+            
+            <div className="space-y-3">
+              {contacts.map((contact, index) => (
+                <div key={index} className="rounded-xl border border-zinc-150 bg-zinc-50/50 p-4 dark:border-zinc-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-150 pb-2 dark:border-zinc-800">
+                    <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                      Contact #{index + 1}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        setContacts(contacts.filter((_, i) => i !== index));
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <Input
+                      label="Designation"
+                      value={contact.designation}
+                      onChange={(e) => {
+                        const updated = [...contacts];
+                        updated[index] = { ...updated[index], designation: e.target.value };
+                        setContacts(updated);
+                      }}
+                      placeholder="e.g. Architect"
+                      required
+                    />
+                    <Input
+                      label="Name (optional)"
+                      value={contact.name}
+                      onChange={(e) => {
+                        const updated = [...contacts];
+                        updated[index] = { ...updated[index], name: e.target.value };
+                        setContacts(updated);
+                      }}
+                      placeholder="e.g. John Doe"
+                    />
+                    <Input
+                      label="Phone"
+                      value={contact.phone}
+                      onChange={(e) => {
+                        const updated = [...contacts];
+                        updated[index] = { ...updated[index], phone: e.target.value };
+                        setContacts(updated);
+                      }}
+                      placeholder="e.g. +91 98765 43210"
+                      required
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="w-full flex items-center justify-center gap-1 mt-2 font-medium"
+                onClick={() => {
+                  setContacts([...contacts, { designation: "Architect", name: "", phone: "" }]);
+                }}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Contact
+              </Button>
             </div>
           </div>
 
@@ -372,6 +459,56 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
           </div>
         </div>
       )}
+
+      {/* Site Contacts Section */}
+      <hr className="my-5 border-zinc-150 dark:border-zinc-800" />
+      
+      <div>
+        <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">
+          Site Contacts
+        </h3>
+        
+        {(!project.siteContacts || project.siteContacts.length === 0) ? (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500 italic">
+            No site contacts added yet.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {project.siteContacts.map((contact, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-950/20"
+              >
+                <div className="min-w-0 flex-1 pr-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="inline-block rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 uppercase tracking-wider">
+                      {contact.designation}
+                    </span>
+                  </div>
+                  {contact.name && (
+                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                      {contact.name}
+                    </h4>
+                  )}
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold mt-0.5 break-all">
+                    {contact.phone}
+                  </p>
+                </div>
+                
+                <a
+                  href={`tel:${contact.phone}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:hover:bg-indigo-950/60 flex-shrink-0"
+                  title={contact.name ? `Call ${contact.name}` : `Call ${contact.designation}`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.24.96l-1.35 1.35a11.047 11.047 0 004.8 4.8l1.35-1.35a1 1 0 01.96-.24l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -130,6 +130,7 @@ export async function updateProject(
   if (fields.clientPhone !== undefined) payload.clientPhone = fields.clientPhone;
 
   if (fields.startDate !== undefined) payload.startDate = fields.startDate;
+  if (fields.siteContacts !== undefined) payload.siteContacts = fields.siteContacts;
 
   await updateDoc(doc(db, COLLECTION, id), payload);
 }

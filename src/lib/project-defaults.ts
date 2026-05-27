@@ -23,6 +23,7 @@ export const PROJECT_FIELD_DEFAULTS = {
   googleMapsLink: "",
   clientPhone: "",
   startDate: "",
+  siteContacts: [] as { designation: string; name: string; phone: string }[],
 } as const;
 
 /** Payload ready for Firestore after sanitization (no undefined). */
@@ -42,6 +43,7 @@ export interface ProjectFirestoreDocument {
   googleMapsLink?: string;
   clientPhone?: string;
   startDate: string;
+  siteContacts?: { designation: string; name: string; phone: string }[];
 }
 
 function clampProgress(value: number): number {
@@ -109,6 +111,7 @@ export function normalizeProjectInput(
     googleMapsLink: (input.googleMapsLink ?? PROJECT_FIELD_DEFAULTS.googleMapsLink).trim(),
     clientPhone: (input.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim(),
     startDate,
+    siteContacts: input.siteContacts ?? [],
   };
 }
 
@@ -139,6 +142,7 @@ export function buildFirestoreProjectDocument(
     googleMapsLink: normalized.googleMapsLink,
     clientPhone: normalized.clientPhone,
     startDate: normalized.startDate,
+    siteContacts: normalized.siteContacts,
   });
 }
 
@@ -191,6 +195,9 @@ export function buildFirestoreUpdateDocument(
     result.startDate = Number.isNaN(parsedStartDate.getTime())
       ? new Date().toISOString()
       : parsedStartDate.toISOString();
+  }
+  if (updates.siteContacts !== undefined) {
+    result.siteContacts = updates.siteContacts;
   }
 
   return sanitizeFirestorePayload(result);
@@ -265,6 +272,9 @@ export function normalizeProjectFromFirestore(
     googleMapsLink: data.googleMapsLink ? String(data.googleMapsLink).trim() : "",
     clientPhone: data.clientPhone ? String(data.clientPhone).trim() : "",
     startDate,
+    siteContacts: Array.isArray(data.siteContacts)
+      ? (data.siteContacts as { designation: string; name: string; phone: string }[])
+      : [],
   };
 }
 
@@ -283,6 +293,7 @@ export type ProjectUpdateInput = Partial<
     | "googleMapsLink"
     | "clientPhone"
     | "startDate"
+    | "siteContacts"
   >
 >;
 

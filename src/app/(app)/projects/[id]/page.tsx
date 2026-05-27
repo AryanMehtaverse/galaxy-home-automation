@@ -4,7 +4,6 @@ import { use } from "react";
 import { useProject } from "@/hooks/useProject";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { SiteDetailsCard } from "@/components/projects/SiteDetailsCard";
-import { ProjectPhotos } from "@/components/projects/ProjectPhotos";
 import { WorkflowTree } from "@/components/workflow/WorkflowTree";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -45,7 +44,6 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     <div className="mx-auto max-w-3xl space-y-6">
       <ProjectHeader project={project} />
       <SiteDetailsCard project={project} />
-      <ProjectPhotos project={project} />
       <div>
         <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
           Workflow
