@@ -15,6 +15,8 @@ import {
 } from "@/lib/firestore/projects";
 import { getSortedPipeline } from "@/lib/workflow/pipeline";
 import { reorderWorkflow } from "@/lib/workflow/mutations";
+import { useAuthContext } from "@/components/providers/AuthProvider";
+import { canEditWorkflowStep } from "@/lib/auth/permissions";
 import {
   DndContext,
   closestCenter,
@@ -66,6 +68,9 @@ interface WorkflowTreeProps {
 }
 
 export function WorkflowTree({ project }: WorkflowTreeProps) {
+  const { user } = useAuthContext();
+  const canEdit = canEditWorkflowStep(user, project);
+
   const [localWorkflow, setLocalWorkflow] = useState(project.workflow);
   const sorted = getSortedPipeline(localWorkflow);
   const [insertAfterId, setInsertAfterId] = useState<string | null | undefined>(undefined);
@@ -166,7 +171,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
     return (
       <div className="relative flex flex-col">
         {/* Insert at the very beginning (index 0) */}
-        <AddStepDivider onClick={() => setInsertAfterId(null)} isFirst />
+        {canEdit && <AddStepDivider onClick={() => setInsertAfterId(null)} isFirst />}
 
         {sorted.map((node, index) => {
           const isLastStep = index === sorted.length - 1;
@@ -216,7 +221,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                   project.status
                 )
               }
-              onDeleteCustomStep={(nodeId) => {
+              onDeleteCustomStep={canEdit ? (nodeId) => {
                 if (window.confirm("Are you sure you want to delete this step?")) {
                   deleteWorkflowCustomStep(
                     project.id,
@@ -225,7 +230,8 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                     project.status
                   );
                 }
-              }}
+              } : undefined}
+              readOnly={!canEdit}
             />
           );
         })}
@@ -261,7 +267,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
       >
         <div className="relative flex flex-col">
           {/* Insert at the very beginning (index 0) */}
-          <AddStepDivider onClick={() => setInsertAfterId(null)} isFirst />
+          {canEdit && <AddStepDivider onClick={() => setInsertAfterId(null)} isFirst />}
 
           {sorted.map((node, index) => {
             const isLastStep = index === sorted.length - 1;
@@ -311,7 +317,7 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                     project.status
                   )
                 }
-                onDeleteCustomStep={(nodeId) => {
+                onDeleteCustomStep={canEdit ? (nodeId) => {
                   if (window.confirm("Are you sure you want to delete this step?")) {
                     deleteWorkflowCustomStep(
                       project.id,
@@ -320,7 +326,8 @@ export function WorkflowTree({ project }: WorkflowTreeProps) {
                       project.status
                     );
                   }
-                }}
+                } : undefined}
+                readOnly={!canEdit}
               />
             );
           })}

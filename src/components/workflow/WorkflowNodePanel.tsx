@@ -17,13 +17,14 @@ import { EditCustomStepModal } from "./EditCustomStepModal";
 interface NotesSectionProps {
   nodeId: string;
   initialNotes: string;
+  disabled?: boolean;
   onNodeUpdate: (
     nodeId: string,
     patch: import("@/types/workflow").WorkflowNodePatch
   ) => void;
 }
 
-function NotesSection({ nodeId, initialNotes, onNodeUpdate }: NotesSectionProps) {
+function NotesSection({ nodeId, initialNotes, disabled, onNodeUpdate }: NotesSectionProps) {
   const [localNotes, setLocalNotes] = useState(initialNotes);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ function NotesSection({ nodeId, initialNotes, onNodeUpdate }: NotesSectionProps)
   }, [initialNotes]);
 
   const handleBlur = () => {
+    if (disabled) return;
     if (localNotes !== initialNotes) {
       onNodeUpdate(nodeId, { notes: localNotes });
     }
@@ -45,9 +47,10 @@ function NotesSection({ nodeId, initialNotes, onNodeUpdate }: NotesSectionProps)
         value={localNotes}
         onChange={(e) => setLocalNotes(e.target.value)}
         onBlur={handleBlur}
+        disabled={disabled}
         placeholder="Add notes for this step..."
         rows={2}
-        className="w-full rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+        className="w-full rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 disabled:opacity-60"
       />
     </div>
   );
@@ -103,6 +106,7 @@ interface WorkflowNodePanelProps {
   onStepToggle: (nodeId: string) => void;
   onToggleCategory: (nodeId: string, categoryId: string) => void;
   onDeleteCustomStep?: (nodeId: string) => void;
+  readOnly?: boolean;
 }
 
 export function WorkflowNodePanel({
@@ -119,10 +123,11 @@ export function WorkflowNodePanel({
   onStepToggle,
   onToggleCategory,
   onDeleteCustomStep,
+  readOnly = false,
 }: WorkflowNodePanelProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const pipelineLocked = !isNodeEditable(workflow, node.id);
-  const disabled = pipelineLocked || node.locked;
+  const disabled = pipelineLocked || node.locked || readOnly;
   const progress = getNodeProgress(node);
   const stepNumber =
     getSortedPipeline(workflow).findIndex((n) => n.id === node.id) + 1;
@@ -155,57 +160,61 @@ export function WorkflowNodePanel({
         description={node.description}
         stepNumber={stepNumber}
         completedAt={node.completedAt}
+        readOnly={readOnly}
+        onCompletedAtChange={(newDate) => onNodeUpdate(node.id, { completedAt: newDate })}
         dragHandle={
-          <div
-            className="mt-1 -ml-1 mr-1 flex items-center gap-1 select-none"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Move Up Button */}
-            <button
-              type="button"
-              disabled={!canMoveUp}
-              onClick={() => onMoveUp()}
-              className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
-                !canMoveUp ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-              }`}
-              title="Move Step Up"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-
-            {/* Move Down Button */}
-            <button
-              type="button"
-              disabled={!canMoveDown}
-              onClick={() => onMoveDown()}
-              className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
-                !canMoveDown ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-              }`}
-              title="Move Step Down"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Drag Grip (keeps Drag and Drop functional) */}
+          !readOnly && (
             <div
-              {...attributes}
-              {...listeners}
-              className="flex h-6 w-6 cursor-grab items-center justify-center rounded text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 active:cursor-grabbing dark:hover:bg-zinc-800 dark:hover:text-zinc-300 touch-none"
-              onPointerDown={(e) => e.stopPropagation()}
+              className="mt-1 -ml-1 mr-1 flex items-center gap-1 select-none"
+              onClick={(e) => e.stopPropagation()}
             >
-              <svg
-                className="h-4 w-4"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+              {/* Move Up Button */}
+              <button
+                type="button"
+                disabled={!canMoveUp}
+                onClick={() => onMoveUp()}
+                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
+                  !canMoveUp ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                }`}
+                title="Move Step Up"
               >
-                <path d="M7 6a1 1 0 100-2 1 1 0 000 2zM7 11a1 1 0 100-2 1 1 0 000 2zM7 16a1 1 0 100-2 1 1 0 000 2zM13 6a1 1 0 100-2 1 1 0 000 2zM13 11a1 1 0 100-2 1 1 0 000 2zM13 16a1 1 0 100-2 1 1 0 000 2z" />
-              </svg>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+
+              {/* Move Down Button */}
+              <button
+                type="button"
+                disabled={!canMoveDown}
+                onClick={() => onMoveDown()}
+                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
+                  !canMoveDown ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                }`}
+                title="Move Step Down"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Drag Grip (keeps Drag and Drop functional) */}
+              <div
+                {...attributes}
+                {...listeners}
+                className="flex h-6 w-6 cursor-grab items-center justify-center rounded text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 active:cursor-grabbing dark:hover:bg-zinc-800 dark:hover:text-zinc-300 touch-none"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M7 6a1 1 0 100-2 1 1 0 000 2zM7 11a1 1 0 100-2 1 1 0 000 2zM7 16a1 1 0 100-2 1 1 0 000 2zM13 6a1 1 0 100-2 1 1 0 000 2zM13 11a1 1 0 100-2 1 1 0 000 2zM13 16a1 1 0 100-2 1 1 0 000 2z" />
+                </svg>
+              </div>
             </div>
-          </div>
+          )
         }
       >
         <div className="space-y-4">
@@ -250,10 +259,11 @@ export function WorkflowNodePanel({
           <NotesSection
             nodeId={node.id}
             initialNotes={node.notes ?? ""}
+            disabled={readOnly}
             onNodeUpdate={onNodeUpdate}
           />
 
-          {(node.custom || onDeleteCustomStep) && (
+          {!readOnly && (node.custom || onDeleteCustomStep) && (
             <div className="mt-4 flex justify-end gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
               {node.custom && (
                 <button
@@ -285,7 +295,9 @@ export function WorkflowNodePanel({
         </div>
       </WorkflowAccordion>
 
-      <AddStepDivider onClick={() => onAddStepClick(node.id)} isLast={isLastStep} />
+      {!readOnly && (
+        <AddStepDivider onClick={() => onAddStepClick(node.id)} isLast={isLastStep} />
+      )}
     </div>
   );
 }

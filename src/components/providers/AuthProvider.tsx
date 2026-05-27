@@ -7,6 +7,7 @@ import type { AppUser } from "@/types/auth";
 interface AuthContextValue {
   user: AppUser | null;
   loading: boolean;
+  authError: string | null;
   signInWithGoogle: () => Promise<AppUser>;
   logout: () => Promise<void>;
 }

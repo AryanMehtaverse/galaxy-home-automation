@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Spinner } from "@/components/ui/Spinner";
 
 export default function LoginPage() {
-  const { user, loading } = useAuthContext();
+  const { user, loading, authError } = useAuthContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -49,6 +49,11 @@ export default function LoginPage() {
           Galaxy Home Automation LLP
         </p>
       </div>
+      {authError && (
+        <div className="mb-4 w-full max-w-sm rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400 text-center font-medium">
+          {authError}
+        </div>
+      )}
       <GoogleSignInButton />
     </div>
   );

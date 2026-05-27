@@ -4,6 +4,8 @@ export interface AppUser {
   email: string;
   displayName: string;
   photoURL: string | null;
+  role?: "admin" | "owner" | "clerk";
+  active?: boolean;
 }
 
 export interface ProjectCreator {

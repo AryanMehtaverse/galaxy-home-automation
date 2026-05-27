@@ -16,6 +16,8 @@ interface WorkflowAccordionProps {
   children: ReactNode;
   completedAt?: string;
   dragHandle?: ReactNode;
+  readOnly?: boolean;
+  onCompletedAtChange?: (newDate: string) => void;
 }
 
 export function WorkflowAccordion({
@@ -30,8 +32,11 @@ export function WorkflowAccordion({
   children,
   completedAt,
   dragHandle,
+  readOnly = false,
+  onCompletedAtChange,
 }: WorkflowAccordionProps) {
   const [open, setOpen] = useState(defaultOpen || (!locked && !completed));
+  const [isEditingDate, setIsEditingDate] = useState(false);
 
   return (
     <div
@@ -79,8 +84,48 @@ export function WorkflowAccordion({
               {title}
             </h3>
             {completed && completedAt && (
-              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
-                Completed on {formatDate(completedAt)}
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20"
+                onClick={(e) => {
+                  if (locked || readOnly) return;
+                  e.stopPropagation();
+                }}
+              >
+                {isEditingDate && !locked && !readOnly ? (
+                  <input
+                    type="date"
+                    value={completedAt ? completedAt.split("T")[0] : ""}
+                    onChange={(e) => {
+                      if (e.target.value && onCompletedAtChange) {
+                        const d = new Date(e.target.value);
+                        onCompletedAtChange(d.toISOString());
+                      }
+                      setIsEditingDate(false);
+                    }}
+                    onBlur={() => setIsEditingDate(false)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded border border-emerald-300 bg-white px-1 py-0.5 text-[10px] text-zinc-955 outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                  />
+                ) : (
+                  <>
+                    <span>Completed on {formatDate(completedAt)}</span>
+                    {!locked && !readOnly && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEditingDate(true);
+                        }}
+                        className="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
+                        title="Edit completion date"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    )}
+                  </>
+                )}
               </span>
             )}
           </div>

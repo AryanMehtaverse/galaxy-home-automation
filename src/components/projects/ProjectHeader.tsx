@@ -10,17 +10,22 @@ import { STATUS_COLORS, PROJECT_STATUSES } from "@/lib/constants";
 import { formatDeadlineLabel, isOverdue } from "@/lib/utils/dates";
 import { DeleteProjectModal } from "./DeleteProjectModal";
 import { CreatorInfo } from "./CreatorInfo";
+import { useAuthContext } from "@/components/providers/AuthProvider";
+import { canDeleteProject } from "@/lib/auth/permissions";
 
 interface ProjectHeaderProps {
   project: Project;
 }
 
 export function ProjectHeader({ project }: ProjectHeaderProps) {
+  const { user } = useAuthContext();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const overdue = isOverdue(project.deadline, project.status);
   const statusLabel =
     PROJECT_STATUSES.find((s) => s.value === project.status)?.label ??
     project.status;
+
+  const canDelete = canDeleteProject(user, project);
 
   return (
     <>
@@ -46,13 +51,15 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             </svg>
             Back to dashboard
           </Link>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setDeleteOpen(true)}
-          >
-            Delete project
-          </Button>
+          {canDelete && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete project
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

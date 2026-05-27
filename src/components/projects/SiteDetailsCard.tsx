@@ -7,12 +7,15 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { updateProject } from "@/lib/firestore/projects";
 import { PROJECT_STATUSES } from "@/lib/constants";
+import { useAuthContext } from "@/components/providers/AuthProvider";
+import { canEditProject } from "@/lib/auth/permissions";
 
 interface SiteDetailsCardProps {
   project: Project;
 }
 
 export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
+  const { user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +30,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   const [landmark, setLandmark] = useState(project.landmark ?? "");
   const [googleMapsLink, setGoogleMapsLink] = useState(project.googleMapsLink ?? "");
   const [clientPhone, setClientPhone] = useState(project.clientPhone ?? "");
-  const [startDate, setStartDate] = useState(project.startDate ?? "");
+  const [startDate, setStartDate] = useState(project.startDate ? project.startDate.split("T")[0] : "");
 
   // Sync state with project updates from Firestore subscription
   useEffect(() => {
@@ -40,7 +43,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setLandmark(project.landmark ?? "");
     setGoogleMapsLink(project.googleMapsLink ?? "");
     setClientPhone(project.clientPhone ?? "");
-    setStartDate(project.startDate ?? "");
+    setStartDate(project.startDate ? project.startDate.split("T")[0] : "");
   }, [project]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -241,14 +244,16 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
           </svg>
           Site & Client Details
         </h2>
-        <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
-          <span className="flex items-center gap-1">
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Edit Details
-          </span>
-        </Button>
+        {canEditProject(user, project) && (
+          <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
+            <span className="flex items-center gap-1">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Edit Details
+            </span>
+          </Button>
+        )}
       </div>
       <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Start Date: {project.startDate ? new Date(project.startDate).toLocaleDateString() : "—"}</p>
 
@@ -257,12 +262,14 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             No site details or contact numbers have been saved yet.
           </p>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-          >
-            Add Details Now
-          </button>
+          {canEditProject(user, project) && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              Add Details Now
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2">
