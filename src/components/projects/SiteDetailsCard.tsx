@@ -9,6 +9,7 @@ import { updateProject } from "@/lib/firestore/projects";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { canEditProject } from "@/lib/auth/permissions";
+import { isOverdue } from "@/lib/utils/dates";
 
 interface SiteDetailsCardProps {
   project: Project;
@@ -25,7 +26,9 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   const [clientName, setClientName] = useState(project.clientName);
   const [siteManagerName, setSiteManagerName] = useState(project.siteManagerName ?? "");
   const [deadline, setDeadline] = useState(project.deadline ? project.deadline.split("T")[0] : "");
-  const [status, setStatus] = useState<ProjectStatus>(project.status);
+  const [status, setStatus] = useState<string>(
+    isOverdue(project.deadline, project.status) ? "overdue" : project.status
+  );
   const [address, setAddress] = useState(project.address ?? "");
   const [city, setCity] = useState(project.city ?? "");
   const [landmark, setLandmark] = useState(project.landmark ?? "");
@@ -42,7 +45,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setClientName(project.clientName);
     setSiteManagerName(project.siteManagerName ?? "");
     setDeadline(project.deadline ? project.deadline.split("T")[0] : "");
-    setStatus(project.status);
+    setStatus(isOverdue(project.deadline, project.status) ? "overdue" : project.status);
     setAddress(project.address ?? "");
     setCity(project.city ?? "");
     setLandmark(project.landmark ?? "");
@@ -80,13 +83,35 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
       }
     }
 
+    // Validate allowed status transitions
+    const initialDynamicStatus = isOverdue(project.deadline, project.status) ? "overdue" : project.status;
+    const targetStatus = status;
+
+    const allowedTransitions: Record<string, string[]> = {
+      planning: ["planning", "in_progress", "completed"],
+      in_progress: ["in_progress", "planning", "completed"],
+      overdue: ["overdue", "in_progress", "completed"],
+      completed: ["completed"],
+    };
+
+    const allowed = allowedTransitions[initialDynamicStatus]
+      ? allowedTransitions[initialDynamicStatus].includes(targetStatus)
+      : true; // fallback for other legacy statuses
+
+    if (!allowed) {
+      setError(`Transition from ${initialDynamicStatus} to ${targetStatus} is not allowed.`);
+      setLoading(false);
+      return;
+    }
+
     try {
+      const dbStatus = (status === "overdue" ? project.status : status) as ProjectStatus;
       await updateProject(project.id, {
         name,
         clientName,
         siteManagerName,
         deadline: deadline,
-        status,
+        status: dbStatus,
         address,
         city,
         landmark,
@@ -108,7 +133,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     setClientName(project.clientName);
     setSiteManagerName(project.siteManagerName ?? "");
     setDeadline(project.deadline ? project.deadline.split("T")[0] : "");
-    setStatus(project.status);
+    setStatus(isOverdue(project.deadline, project.status) ? "overdue" : project.status);
     setAddress(project.address ?? "");
     setCity(project.city ?? "");
     setLandmark(project.landmark ?? "");
@@ -130,6 +155,36 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
   };
 
   if (isEditing) {
+    const isProjOverdue = isOverdue(project.deadline, project.status);
+    const initialDynamicStatus = isProjOverdue ? "overdue" : project.status;
+
+    let statusOptions: { value: string; label: string }[] = [];
+    if (initialDynamicStatus === "planning") {
+      statusOptions = [
+        { value: "planning", label: "Planning" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "completed", label: "Completed" },
+      ];
+    } else if (initialDynamicStatus === "in_progress") {
+      statusOptions = [
+        { value: "in_progress", label: "In Progress" },
+        { value: "planning", label: "Planning" },
+        { value: "completed", label: "Completed" },
+      ];
+    } else if (initialDynamicStatus === "overdue") {
+      statusOptions = [
+        { value: "overdue", label: "Overdue" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "completed", label: "Completed" },
+      ];
+    } else if (initialDynamicStatus === "completed") {
+      statusOptions = [
+        { value: "completed", label: "Completed" },
+      ];
+    } else {
+      statusOptions = PROJECT_STATUSES;
+    }
+
     return (
       <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900 shadow-sm transition-all">
         <div className="mb-4 flex items-center justify-between">
@@ -192,8 +247,8 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                 <Select
                   label="Status"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-                  options={PROJECT_STATUSES}
+                  onChange={(e) => setStatus(e.target.value)}
+                  options={statusOptions}
                 />
               </div>
             </div>

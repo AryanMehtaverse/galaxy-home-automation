@@ -15,9 +15,13 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const overdue = isOverdue(project.deadline, project.status);
-  const statusLabel =
-    PROJECT_STATUSES.find((s) => s.value === project.status)?.label ??
-    project.status;
+  const statusLabel = overdue
+    ? "Overdue"
+    : (PROJECT_STATUSES.find((s) => s.value === project.status)?.label ?? project.status);
+
+  const badgeClass = overdue
+    ? "bg-red-500/15 text-red-600 dark:text-red-300"
+    : (STATUS_COLORS[project.status] ?? STATUS_COLORS.planning);
 
   return (
     <Link href={`/projects/${project.id}`}>
@@ -34,7 +38,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <p className="mt-0.5 text-sm text-zinc-500">{project.clientName}</p>
             )}
           </div>
-          <Badge className={STATUS_COLORS[project.status]}>{statusLabel}</Badge>
+          <Badge className={badgeClass}>{statusLabel}</Badge>
         </div>
 
         <div className="mt-4">

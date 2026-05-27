@@ -8,22 +8,28 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ projects }: DashboardStatsProps) {
-  const total = projects.length;
-  const inProgress = projects.filter((p) => p.status === "in_progress").length;
+  const planning = projects.filter(
+    (p) => p.status === "planning" && !isOverdue(p.deadline, p.status)
+  ).length;
+  const inProgress = projects.filter(
+    (p) => p.status === "in_progress" && !isOverdue(p.deadline, p.status)
+  ).length;
   const completed = projects.filter((p) => p.status === "completed").length;
   const overdue = projects.filter((p) =>
     isOverdue(p.deadline, p.status)
   ).length;
+  const total = planning + inProgress + completed + overdue;
 
   const stats = [
     { label: "Total Projects", value: total, color: "text-zinc-900 dark:text-zinc-100" },
+    { label: "Planning", value: planning, color: "text-slate-600 dark:text-slate-400" },
     { label: "In Progress", value: inProgress, color: "text-blue-600 dark:text-blue-400" },
     { label: "Completed", value: completed, color: "text-emerald-600 dark:text-emerald-400" },
     { label: "Overdue", value: overdue, color: "text-red-600 dark:text-red-400" },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {stats.map((stat) => (
         <div
           key={stat.label}
