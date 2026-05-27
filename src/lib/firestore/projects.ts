@@ -292,3 +292,66 @@ export async function restoreFromRecycleBin(id: string): Promise<void> {
 
   await writeAuditLog(id, "restore_deleted_project", `Project restored from recycle bin`);
 }
+
+export interface ProjectPhoto {
+  id: string;
+  url: string;
+  publicId: string;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
+export function subscribeToProjectPhotos(
+  projectId: string,
+  callback: (photos: ProjectPhoto[]) => void
+): Unsubscribe {
+  const q = query(
+    collection(db, "projects", projectId, "photos"),
+    orderBy("uploadedAt", "desc")
+  );
+  return onSnapshot(q, (snapshot) => {
+    const photos = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      let uploadedAt = "";
+      if (data.uploadedAt && typeof data.uploadedAt === "object" && "toDate" in data.uploadedAt) {
+        uploadedAt = (data.uploadedAt as { toDate: () => Date }).toDate().toISOString();
+      } else if (typeof data.uploadedAt === "string") {
+        uploadedAt = data.uploadedAt;
+      }
+      return {
+        id: doc.id,
+        url: String(data.url ?? ""),
+        publicId: String(data.publicId ?? ""),
+        uploadedAt,
+        uploadedBy: String(data.uploadedBy ?? ""),
+      };
+    });
+    callback(photos);
+  });
+}
+
+export async function addProjectPhoto(
+  projectId: string,
+  url: string,
+  publicId: string
+): Promise<void> {
+  const currentUser = auth.currentUser;
+  const uploadedByName = currentUser ? (currentUser.displayName || currentUser.email || "Unknown User") : "Unknown User";
+
+  await addDoc(collection(db, "projects", projectId, "photos"), {
+    url,
+    publicId,
+    uploadedAt: Timestamp.now(),
+    uploadedBy: uploadedByName,
+  });
+
+  await writeAuditLog(projectId, "upload_photo", `Uploaded site photo`);
+}
+
+export async function deleteProjectPhoto(
+  projectId: string,
+  photoId: string
+): Promise<void> {
+  await deleteDoc(doc(db, "projects", projectId, "photos", photoId));
+  await writeAuditLog(projectId, "delete_photo", `Deleted site photo`);
+}
