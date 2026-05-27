@@ -11,7 +11,7 @@ import {
   deleteField,
   type Unsubscribe,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import type { Project, ProjectCreateInput } from "@/types";
 import type { ProjectCreator } from "@/types/auth";
 import type {
@@ -264,6 +264,56 @@ export async function reorderWorkflowSteps(
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await writeAuditLog(id, "delete_project", `Deleted project`);
+  const currentUser = auth.currentUser;
+  const deletedByName = currentUser ? (currentUser.displayName || currentUser.email || "Unknown User") : "Unknown User";
+
+  await updateDoc(doc(db, COLLECTION, id), {
+    deleted: true,
+    deletedAt: Timestamp.now(),
+    deletedBy: deletedByName,
+    updatedAt: Timestamp.now()
+  });
+
+  await writeAuditLog(id, "delete_project", `Project moved to recycle bin`);
+}
+
+export async function permanentlyDeleteProject(id: string): Promise<void> {
+  await writeAuditLog(id, "permanent_delete_project", `Project permanently deleted`);
   await deleteDoc(doc(db, COLLECTION, id));
+}
+
+export async function archiveProject(id: string): Promise<void> {
+  const currentUser = auth.currentUser;
+  const archivedByName = currentUser ? (currentUser.displayName || currentUser.email || "Unknown User") : "Unknown User";
+
+  await updateDoc(doc(db, COLLECTION, id), {
+    archived: true,
+    archivedAt: Timestamp.now(),
+    archivedBy: archivedByName,
+    updatedAt: Timestamp.now()
+  });
+
+  await writeAuditLog(id, "archive_project", `Project archived`);
+}
+
+export async function restoreFromArchive(id: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), {
+    archived: false,
+    archivedAt: deleteField(),
+    archivedBy: deleteField(),
+    updatedAt: Timestamp.now()
+  });
+
+  await writeAuditLog(id, "restore_archive_project", `Project restored from archive`);
+}
+
+export async function restoreFromRecycleBin(id: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), {
+    deleted: false,
+    deletedAt: deleteField(),
+    deletedBy: deleteField(),
+    updatedAt: Timestamp.now()
+  });
+
+  await writeAuditLog(id, "restore_deleted_project", `Project restored from recycle bin`);
 }

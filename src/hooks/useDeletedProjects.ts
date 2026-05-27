@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { subscribeToProjects } from "@/lib/firestore/projects";
 import type { Project } from "@/types";
 
-export function useProjects() {
+export function useDeletedProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeToProjects((data) => {
-      const nonDeleted = data.filter((p) => !p.deleted);
-      setProjects(nonDeleted);
+      const deleted = data.filter((p) => p.deleted);
+      setProjects(deleted);
       setLoading(false);
     });
     return unsubscribe;

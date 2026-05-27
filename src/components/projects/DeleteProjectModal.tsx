@@ -56,7 +56,7 @@ export function DeleteProjectModal({
         <span className="font-medium text-zinc-900 dark:text-zinc-100">
           {projectName}
         </span>
-        ? This action cannot be undone and will remove all workflow data.
+        ? It will be moved to the Recycle Bin and can be restored later by an administrator or owner.
       </p>
       {error && (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>

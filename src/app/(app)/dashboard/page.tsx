@@ -11,8 +11,17 @@ import { Spinner } from "@/components/ui/Spinner";
 export default function DashboardPage() {
   const { projects, loading } = useProjects();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
 
-  const filteredProjects = projects.filter((project) => {
+  const activeProjects = projects.filter((p) => !p.archived);
+  const archivedProjects = projects.filter((p) => p.archived);
+
+  const tabProjects = projects.filter((p) => {
+    if (activeTab === "archived") return p.archived;
+    return !p.archived;
+  });
+
+  const filteredProjects = tabProjects.filter((project) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
 
@@ -48,11 +57,44 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <DashboardStats projects={projects} />
-          <div>
-            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <DashboardStats projects={activeProjects} />
+          
+          <div className="space-y-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setActiveTab("active");
+                    setSearchQuery("");
+                  }}
+                  className={`pb-2.5 text-sm font-semibold border-b-2 px-1 transition-colors ${
+                    activeTab === "active"
+                      ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  Active Projects ({activeProjects.length})
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("archived");
+                    setSearchQuery("");
+                  }}
+                  className={`pb-2.5 text-sm font-semibold border-b-2 px-1 transition-colors ${
+                    activeTab === "archived"
+                      ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                      : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  Archived Projects ({archivedProjects.length})
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                Projects {projects.length > 0 && `(${filteredProjects.length})`}
+                {activeTab === "active" ? "Active Projects" : "Archived Projects"}{" "}
+                {tabProjects.length > 0 && `(${filteredProjects.length})`}
               </h2>
               {projects.length > 0 && (
                 <div className="relative w-full max-w-md">

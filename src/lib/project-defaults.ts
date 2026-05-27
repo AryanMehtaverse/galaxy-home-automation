@@ -46,6 +46,12 @@ export interface ProjectFirestoreDocument {
   clientPhone?: string;
   startDate: string;
   siteContacts?: { designation: string; name: string; phone: string }[];
+  archived?: boolean;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  deleted?: boolean;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 function clampProgress(value: number): number {
@@ -208,6 +214,24 @@ export function buildFirestoreUpdateDocument(
   if (updates.siteContacts !== undefined) {
     result.siteContacts = updates.siteContacts;
   }
+  if (updates.archived !== undefined) {
+    result.archived = updates.archived;
+  }
+  if (updates.archivedAt !== undefined) {
+    result.archivedAt = updates.archivedAt;
+  }
+  if (updates.archivedBy !== undefined) {
+    result.archivedBy = updates.archivedBy;
+  }
+  if (updates.deleted !== undefined) {
+    result.deleted = updates.deleted;
+  }
+  if (updates.deletedAt !== undefined) {
+    result.deletedAt = updates.deletedAt;
+  }
+  if (updates.deletedBy !== undefined) {
+    result.deletedBy = updates.deletedBy;
+  }
 
   return sanitizeFirestorePayload(result);
 }
@@ -287,6 +311,12 @@ export function normalizeProjectFromFirestore(
     siteContacts: Array.isArray(data.siteContacts)
       ? (data.siteContacts as { designation: string; name: string; phone: string }[])
       : [],
+    archived: !!data.archived,
+    archivedAt: data.archivedAt ? toIso(data.archivedAt, "") : undefined,
+    archivedBy: data.archivedBy ? String(data.archivedBy) : undefined,
+    deleted: !!data.deleted,
+    deletedAt: data.deletedAt ? toIso(data.deletedAt, "") : undefined,
+    deletedBy: data.deletedBy ? String(data.deletedBy) : undefined,
   };
 }
 
@@ -307,6 +337,12 @@ export type ProjectUpdateInput = Partial<
     | "clientPhone"
     | "startDate"
     | "siteContacts"
+    | "archived"
+    | "archivedAt"
+    | "archivedBy"
+    | "deleted"
+    | "deletedAt"
+    | "deletedBy"
   >
 >;
 
