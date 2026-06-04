@@ -5,14 +5,19 @@ import Link from "next/link";
 import { useProjects } from "@/hooks/useProjects";
 import { DashboardStats } from "@/components/projects/DashboardStats";
 import { ProjectList } from "@/components/projects/ProjectList";
+import { UrgentAlertsSection } from "@/components/projects/UrgentAlertsSection";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { isOverdue } from "@/lib/utils/dates";
+import { useAuthContext } from "@/components/providers/AuthProvider";
+import { getAlertsForUser } from "@/lib/utils/alerts";
 
 export default function DashboardPage() {
+  const { user } = useAuthContext();
   const { projects, loading } = useProjects();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
 
   const filteredProjects = projects.filter((project) => {
     // 1. Search Query filter
@@ -80,6 +85,8 @@ export default function DashboardPage() {
             activeFilter={activeFilter}
             onCardClick={setActiveFilter}
           />
+          
+          <UrgentAlertsSection alerts={getAlertsForUser(projects, user)} />
           
           <div className="space-y-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
