@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { STATUS_COLORS, PROJECT_STATUSES } from "@/lib/constants";
 import { formatDate, isOverdue } from "@/lib/utils/dates";
-import { CreatorInfo } from "./CreatorInfo";
 
 interface ProjectCardProps {
   project: Project;

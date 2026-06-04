@@ -29,7 +29,9 @@ export default function DashboardPage() {
         (project.address && project.address.toLowerCase().includes(query)) ||
         (project.city && project.city.toLowerCase().includes(query)) ||
         (project.landmark && project.landmark.toLowerCase().includes(query)) ||
-        (project.clientPhone && project.clientPhone.toLowerCase().includes(query));
+        (project.clientPhone && project.clientPhone.toLowerCase().includes(query)) ||
+        (project.siteManagerName && project.siteManagerName.toLowerCase().includes(query)) ||
+        (project.clientAccessCode && project.clientAccessCode.toLowerCase().includes(query));
       if (!match) return false;
     }
 
@@ -125,7 +127,7 @@ export default function DashboardPage() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, client, address, city, landmark..."
+                    placeholder="Search by name, client, code, manager, address..."
                     className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
                   {searchQuery && (
