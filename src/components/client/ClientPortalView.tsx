@@ -42,6 +42,10 @@ export function ClientPortalView({ project, onLogout }: ClientPortalViewProps) {
     on_hold: "On Hold",
   };
 
+  const clientFirstName = project.clientName?.trim()
+    ? project.clientName.trim().split(/\s+/)[0]
+    : "";
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Premium Header */}
@@ -50,16 +54,25 @@ export function ClientPortalView({ project, onLogout }: ClientPortalViewProps) {
         <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between relative z-10">
-          <div>
-            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 uppercase tracking-wider">
-              Client Portal
-            </span>
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 uppercase tracking-wider">
+                Client Portal
+              </span>
+              {project.clientAccessCode && (
+                <span className="inline-flex items-center rounded-full bg-zinc-150 px-2.5 py-0.5 text-xs font-mono font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  Client Access Code: {project.clientAccessCode}
+                </span>
+              )}
+            </div>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-3xl">
               {project.name}
             </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Welcome, <span className="font-semibold text-zinc-800 dark:text-zinc-200">{project.clientName || "Client"}</span>
-            </p>
+            {clientFirstName && (
+              <p className="mt-1 text-sm text-zinc-500">
+                Welcome, <span className="font-semibold text-zinc-800 dark:text-zinc-200">{clientFirstName}</span>
+              </p>
+            )}
           </div>
           <button
             onClick={onLogout}
