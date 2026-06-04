@@ -23,6 +23,7 @@ export const PROJECT_FIELD_DEFAULTS = {
   landmark: "",
   googleMapsLink: "",
   clientPhone: "",
+  clientAccessCode: "",
   startDate: "",
   siteContacts: [] as { designation: string; name: string; phone: string }[],
 } as const;
@@ -44,6 +45,7 @@ export interface ProjectFirestoreDocument {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  clientAccessCode?: string;
   startDate: string;
   siteContacts?: { designation: string; name: string; phone: string }[];
   deleted?: boolean;
@@ -116,6 +118,7 @@ export function normalizeProjectInput(
     landmark: (input.landmark ?? PROJECT_FIELD_DEFAULTS.landmark).trim(),
     googleMapsLink: (input.googleMapsLink ?? PROJECT_FIELD_DEFAULTS.googleMapsLink).trim(),
     clientPhone: (input.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim(),
+    clientAccessCode: input.clientAccessCode ?? PROJECT_FIELD_DEFAULTS.clientAccessCode,
     startDate,
     siteContacts: input.siteContacts ?? [],
   };
@@ -148,6 +151,7 @@ export function buildFirestoreProjectDocument(
     landmark: normalized.landmark,
     googleMapsLink: normalized.googleMapsLink,
     clientPhone: normalized.clientPhone,
+    clientAccessCode: normalized.clientAccessCode,
     startDate: normalized.startDate,
     siteContacts: normalized.siteContacts,
   });
@@ -201,6 +205,9 @@ export function buildFirestoreUpdateDocument(
   }
   if (updates.clientPhone !== undefined) {
     result.clientPhone = (updates.clientPhone ?? PROJECT_FIELD_DEFAULTS.clientPhone).trim();
+  }
+  if (updates.clientAccessCode !== undefined) {
+    result.clientAccessCode = updates.clientAccessCode;
   }
   if (updates.startDate !== undefined) {
     const parsedStartDate = updates.startDate ? new Date(updates.startDate) : new Date();
@@ -295,6 +302,7 @@ export function normalizeProjectFromFirestore(
     landmark: data.landmark ? String(data.landmark).trim() : "",
     googleMapsLink: data.googleMapsLink ? String(data.googleMapsLink).trim() : "",
     clientPhone: data.clientPhone ? String(data.clientPhone).trim() : "",
+    clientAccessCode: data.clientAccessCode ? String(data.clientAccessCode).trim() : undefined,
     startDate,
     siteContacts: Array.isArray(data.siteContacts)
       ? (data.siteContacts as { designation: string; name: string; phone: string }[])
@@ -320,6 +328,7 @@ export type ProjectUpdateInput = Partial<
     | "landmark"
     | "googleMapsLink"
     | "clientPhone"
+    | "clientAccessCode"
     | "startDate"
     | "siteContacts"
     | "deleted"

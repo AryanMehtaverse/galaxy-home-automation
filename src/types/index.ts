@@ -35,6 +35,7 @@ export interface Project {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  clientAccessCode?: string;
   startDate: string;
   siteContacts?: {
     designation: string;
@@ -62,6 +63,8 @@ export interface ProjectCreateInput {
   landmark?: string;
   googleMapsLink?: string;
   clientPhone?: string;
+  clientAccessCode?: string;
+
   startDate: string;
   siteContacts?: {
     designation: string;

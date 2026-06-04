@@ -39,6 +39,7 @@ import {
 import { reconcileWorkflow } from "@/lib/workflow/pipeline";
 import { calculateWorkflowProgress } from "@/lib/workflow/progress";
 import { writeAuditLog } from "./audit";
+import { generateUniqueAccessCode } from "@/lib/utils/accessCode";
 
 const COLLECTION = "projects";
 
@@ -76,7 +77,8 @@ export async function createProject(
   input: ProjectCreateInput,
   creator: ProjectCreator
 ): Promise<string> {
-  const document = buildFirestoreProjectDocument(input, creator);
+  const clientAccessCode = await generateUniqueAccessCode();
+  const document = buildFirestoreProjectDocument({ ...input, clientAccessCode }, creator);
   const now = Timestamp.now();
 
   const docData = sanitizeFirestorePayload({
@@ -96,6 +98,7 @@ export async function createProject(
     landmark: document.landmark,
     googleMapsLink: document.googleMapsLink,
     clientPhone: document.clientPhone,
+    clientAccessCode: document.clientAccessCode ?? "",
     startDate: document.startDate,
     siteManagerName: document.siteManagerName ?? "",
     siteContacts: document.siteContacts ?? [],
@@ -134,6 +137,7 @@ export async function updateProject(
   if (fields.landmark !== undefined) payload.landmark = fields.landmark;
   if (fields.googleMapsLink !== undefined) payload.googleMapsLink = fields.googleMapsLink;
   if (fields.clientPhone !== undefined) payload.clientPhone = fields.clientPhone;
+  if (fields.clientAccessCode !== undefined) payload.clientAccessCode = fields.clientAccessCode;
 
   if (fields.startDate !== undefined) payload.startDate = fields.startDate;
   if (fields.siteContacts !== undefined) payload.siteContacts = fields.siteContacts;
