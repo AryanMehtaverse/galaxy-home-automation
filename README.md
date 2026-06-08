@@ -1,4 +1,4 @@
-# AutoFlow — Workflow Manager
+# Galaxy Dashboard — Workflow Manager
 
 Collaborative workflow management for home automation projects. Built with Next.js App Router, Tailwind CSS, Firebase Authentication, and Firestore realtime sync.
 
