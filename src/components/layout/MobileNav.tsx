@@ -24,7 +24,7 @@ export function MobileNav() {
           </svg>
         </button>
         <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-          AutoFlow
+          Galaxy Dashboard
         </span>
         <div className="w-10" />
       </header>
