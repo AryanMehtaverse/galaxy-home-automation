@@ -39,23 +39,22 @@ export default function InventoryDetailPage({ params }: InventoryDetailPageProps
 
   return (
     <div className="space-y-6 flex flex-col h-full">
-      {/* Breadcrumbs and Action Button */}
+      {/* Back button */}
+      <div>
+        <Link
+          href="/dashboard/inventory"
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 font-medium hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Inventory
+        </Link>
+      </div>
+
+      {/* Header and Action Button */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-150 pb-4 dark:border-zinc-800">
         <div>
-          {/* Breadcrumbs path */}
-          <nav className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium mb-1">
-            <Link
-              href="/dashboard/inventory"
-              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-            >
-              Inventory
-            </Link>
-            <span className="text-zinc-350 dark:text-zinc-700 select-none">/</span>
-            <span className="text-zinc-900 dark:text-zinc-100 font-semibold truncate max-w-[200px]">
-              {sheet.name}
-            </span>
-          </nav>
-          
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 truncate" title={sheet.name}>
             {sheet.name}
           </h1>

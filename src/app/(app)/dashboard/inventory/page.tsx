@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { useInventorySheets } from "@/hooks/useInventorySheets";
 import {
@@ -17,8 +18,7 @@ import {
   canOpenInventorySheet,
 } from "@/lib/auth/permissions";
 import { parseGoogleSheetsUrl } from "@/lib/utils/sheets";
-import { formatDate } from "@/lib/utils/dates";
-import { Card } from "@/components/ui/Card";
+import { formatAlertDate } from "@/lib/utils/dates";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -29,11 +29,47 @@ import type { InventorySheet, AppUser } from "@/types";
 export default function InventoryPage() {
   const { user } = useAuthContext();
   const { sheets, loading } = useInventorySheets();
+  const router = useRouter();
 
   // Dialog & Modal States
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingSheet, setEditingSheet] = useState<InventorySheet | null>(null);
   const [deletingSheet, setDeletingSheet] = useState<InventorySheet | null>(null);
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+
+  // Close dropdown on scroll or resize to keep position aligned
+  useEffect(() => {
+    if (!activeDropdownId) return;
+
+    const handleScrollOrResize = () => {
+      setActiveDropdownId(null);
+      setDropdownPosition(null);
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [activeDropdownId]);
+
+  const handleDropdownToggle = (e: React.MouseEvent<HTMLButtonElement>, sheetId: string) => {
+    e.stopPropagation();
+    if (activeDropdownId === sheetId) {
+      setActiveDropdownId(null);
+      setDropdownPosition(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setActiveDropdownId(sheetId);
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 128, // aligns the right side of the 128px dropdown with the trigger
+      });
+    }
+  };
 
   // Permission Checks
   const allowedToAdd = canAddInventorySheet(user);
@@ -89,109 +125,146 @@ export default function InventoryPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sheets.map((sheet) => (
-            <Card key={sheet.id} className="flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="space-y-4">
-                {/* Header Icon + Info */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-bold text-zinc-900 dark:text-zinc-100" title={sheet.name}>
+        <>
+          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+            <table className="min-w-full table-fixed divide-y divide-zinc-200 dark:divide-zinc-800 text-left text-sm">
+              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                <tr>
+                  <th className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Sheet Name
+                  </th>
+                  <th style={{ width: "200px" }} className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Created By
+                  </th>
+                  <th style={{ width: "150px" }} className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Created On
+                  </th>
+                  <th style={{ width: "60px" }} className="px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Open
+                  </th>
+                  {(allowedToEdit || allowedToDelete) && (
+                    <th style={{ width: "60px" }} className="px-6 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-150 dark:divide-zinc-800/50 bg-white dark:bg-zinc-900">
+                {sheets.map((sheet) => (
+                  <tr
+                    key={sheet.id}
+                    onClick={() => router.push(`/dashboard/inventory/${sheet.id}`)}
+                    className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/10 cursor-pointer transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-0">
                       {sheet.name}
-                    </h3>
-                    <p className="text-[10px] text-zinc-400 mt-0.5">
-                      Spreadsheet ID: <span className="font-mono text-zinc-500">{sheet.spreadsheetId.slice(0, 8)}...</span>
-                    </p>
-                  </div>
-                </div>
+                    </td>
+                    <td style={{ width: "200px" }} className="px-6 py-4 text-zinc-600 dark:text-zinc-400 truncate whitespace-nowrap max-w-[200px]">
+                      {sheet.createdBy.displayName || sheet.createdBy.email}
+                    </td>
+                    <td style={{ width: "150px" }} className="px-6 py-4 text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                      {formatAlertDate(sheet.createdAt)}
+                    </td>
+                    <td style={{ width: "60px" }} className="px-6 py-4 text-center whitespace-nowrap">
+                      {allowedToOpen ? (
+                        <a
+                          href={sheet.originalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="inline-flex items-center justify-center rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-605 transition-colors"
+                          title="Open in new tab"
+                        >
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      ) : (
+                        <span className="text-zinc-350 dark:text-zinc-700">—</span>
+                      )}
+                    </td>
+                    {(allowedToEdit || allowedToDelete) && (
+                      <td style={{ width: "60px" }} className="px-6 py-4 text-center whitespace-nowrap relative">
+                        <div className="relative inline-block text-left">
+                          <button
+                            type="button"
+                            onClick={(e) => handleDropdownToggle(e, sheet.id)}
+                            className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-650 dark:hover:text-zinc-300"
+                            title="Actions"
+                          >
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-                {/* Metadata details */}
-                <div className="space-y-1.5 border-t border-zinc-100 pt-3 text-xs dark:border-zinc-800 text-zinc-500 dark:text-zinc-400">
-                  <div className="flex items-center gap-1.5">
-                    <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span>Created: {formatDate(sheet.createdAt)}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    <span className="truncate">Added By: {sheet.createdBy.displayName || sheet.createdBy.email}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                {allowedToOpen ? (
-                  <Link href={`/dashboard/inventory/${sheet.id}`}>
-                    <Button variant="primary" size="sm">
-                      Open Sheet
-                    </Button>
-                  </Link>
-                ) : (
-                  <div />
-                )}
-
-                <div className="flex items-center gap-2">
+          {/* Render absolute floating dropdown overlay in a React Portal to prevent clipping */}
+          {activeDropdownId && dropdownPosition && typeof document !== "undefined" && createPortal(
+            <>
+              {/* Fullscreen backdrop overlay for closing dropdown */}
+              <div
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveDropdownId(null);
+                  setDropdownPosition(null);
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                }}
+                className="w-32 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg ring-1 ring-black/5 focus:outline-none z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
                   {allowedToEdit && (
                     <button
-                      onClick={() => setEditingSheet(sheet)}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-150 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                      title="Edit Sheet"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const sheet = sheets.find((s) => s.id === activeDropdownId);
+                        if (sheet) setEditingSheet(sheet);
+                        setActiveDropdownId(null);
+                        setDropdownPosition(null);
+                      }}
+                      className="flex w-full items-center px-4 py-2 text-sm text-zinc-750 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left font-medium"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                        />
-                      </svg>
+                      Edit
                     </button>
                   )}
                   {allowedToDelete && (
                     <button
-                      onClick={() => setDeletingSheet(sheet)}
-                      className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-300"
-                      title="Delete Sheet"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const sheet = sheets.find((s) => s.id === activeDropdownId);
+                        if (sheet) setDeletingSheet(sheet);
+                        setActiveDropdownId(null);
+                        setDropdownPosition(null);
+                      }}
+                      className="flex w-full items-center px-4 py-2 text-sm text-red-650 dark:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-left font-medium"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      Delete
                     </button>
                   )}
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
+            </>,
+            document.body
+          )}
+        </>
       )}
 
       {/* Add Sheet Modal */}
