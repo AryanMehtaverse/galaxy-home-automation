@@ -98,3 +98,23 @@ export function canViewProjectAlert(user: AppUser | null | undefined, project: P
   return false;
 }
 
+export function canAddInventorySheet(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner";
+}
+
+export function canEditInventorySheet(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner";
+}
+
+export function canDeleteInventorySheet(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner";
+}
+
+export function canOpenInventorySheet(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner" || user.role === "clerk";
+}
+

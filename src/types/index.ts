@@ -76,3 +76,5 @@ export interface ProjectCreateInput {
 export type ProjectInput = Omit<Project, "id" | "createdAt" | "updatedAt">;
 
 export type { AppUser, ProjectCreator } from "./auth";
+export type { InventorySheet } from "./inventory";
+

@@ -1,7 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserMenu } from "./UserMenu";
 import { useAuthContext } from "@/components/providers/AuthProvider";
@@ -18,6 +18,32 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuthContext();
   const { projects } = useProjects();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // Only load collapsed state on desktop view (where onNavigate is not defined)
+    if (!onNavigate) {
+      const stored = localStorage.getItem("sidebar-collapsed");
+      if (stored === "true") {
+        requestAnimationFrame(() => {
+          setIsCollapsed(true);
+        });
+      }
+    }
+    requestAnimationFrame(() => {
+      setMounted(true);
+    });
+  }, [onNavigate]);
+
+  const handleToggleCollapse = () => {
+    const nextState = !isCollapsed;
+    setIsCollapsed(nextState);
+    localStorage.setItem("sidebar-collapsed", String(nextState));
+  };
+
+  // Force expanded behavior on mobile layout
+  const effectiveCollapsed = onNavigate ? false : isCollapsed;
 
   const alertsCount = getAlertsForUser(projects, user).length;
 
@@ -26,7 +52,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       href: "/dashboard",
       label: "Dashboard",
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -38,9 +64,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     },
     {
       href: "/dashboard/alerts",
-      label: `⚠ Alerts (${alertsCount})`,
+      label: `Alerts (${alertsCount})`,
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -49,12 +75,28 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           />
         </svg>
       ),
+      badgeLabel: `Alerts (${alertsCount})`,
+    },
+    {
+      href: "/dashboard/inventory",
+      label: "Inventory",
+      icon: (
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+          />
+        </svg>
+      ),
+      badgeLabel: "Inventory",
     },
     {
       href: "/projects/new",
       label: "New Project",
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -68,7 +110,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       href: "/dashboard/activity-logs",
       label: "Activity Logs",
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -82,7 +124,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       href: "/dashboard/recycle-bin",
       label: "Recycle Bin",
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -105,23 +147,33 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   });
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-5 dark:border-zinc-800">
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-transparent">
-          <Image
-            src="/Galaxy Logo no bg.jpeg"
-            alt="Galaxy Home Automation"
-            width={40}
-            height={40}
-            className="object-contain"
-            priority
-          />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Project Manager Tool
-          </p>
-          <p className="text-xs text-zinc-500">Galaxy Home Automation LLP</p>
+    <aside
+      className={`flex h-full flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 select-none ${mounted ? "transition-all duration-300 ease-in-out" : ""
+        } ${effectiveCollapsed ? "w-16" : "w-64"}`}
+    >
+      <div
+        className={`flex items-center border-b border-zinc-200 px-4 py-5 dark:border-zinc-800 transition-all duration-300 ${effectiveCollapsed ? "justify-center px-2" : "justify-start gap-3"
+          }`}
+      >
+        <button
+          onClick={handleToggleCollapse}
+          className="hidden lg:flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors"
+          title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div className={`flex items-center gap-2 min-w-0 transition-all duration-300 ${effectiveCollapsed ? "hidden lg:hidden" : ""}`}>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+              Project Manager Tool
+            </p>
+            <p className="text-xs text-zinc-500 leading-tight mt-0.5">
+              Galaxy Home Automation LLP
+            </p>
+          </div>
         </div>
       </div>
 
@@ -130,25 +182,34 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           const active =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+          const displayLabel = item.badgeLabel || item.label;
+
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                active
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative group/nav ${active
                   ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-              }`}
+                } ${effectiveCollapsed ? "justify-center px-2" : ""}`}
             >
               {item.icon}
-              {item.label}
+              <span className={`transition-all duration-300 whitespace-nowrap ${effectiveCollapsed ? "hidden lg:hidden" : ""}`}>
+                {displayLabel}
+              </span>
+              {effectiveCollapsed && (
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-zinc-900 text-zinc-100 text-xs whitespace-nowrap opacity-0 group-hover/nav:opacity-100 transition-opacity pointer-events-none z-50 shadow-md border border-zinc-700">
+                  {displayLabel}
+                </div>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <UserMenu />
+      <UserMenu collapsed={effectiveCollapsed} />
     </aside>
   );
 }
