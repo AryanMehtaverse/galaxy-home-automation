@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "Project Manager Tool",
   description:
     "Collaborative workflow management for home automation projects",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
