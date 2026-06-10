@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { Content } from "@google/generative-ai";
 import { GALAXY_STATIC_CONTEXT } from "@/lib/sopContext";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { fetchAuditLogs } from "@/lib/firestore/audit";
@@ -383,12 +384,11 @@ async function generateWithGemini(message: string, systemPrompt: string, history
   }
 
   // Build Gemini chat history from conversation history (exclude last user message, that's sent via sendMessage)
-  const geminiHistory = history.flatMap((entry) => {
-    if (entry.role === "user") {
-      return [{ role: "user" as const, parts: [{ text: entry.content }] }];
-    } else {
-      return [{ role: "model" as const, parts: [{ text: entry.content }] }];
-    }
+  const geminiHistory: Content[] = history.flatMap((entry): Content[] => {
+    const content: Content = entry.role === "user"
+      ? { role: "user", parts: [{ text: entry.content }] }
+      : { role: "model", parts: [{ text: entry.content }] };
+    return [content];
   });
 
   let result: any = null;
