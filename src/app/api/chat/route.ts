@@ -45,8 +45,18 @@ function formatQuotesContext(quotes: any[]): string {
     if (q.status) lines.push(`  Status: ${q.status}`);
     if (q.createdAt) lines.push(`  Created: ${new Date(q.createdAt).toLocaleDateString("en-IN")}`);
     if (Array.isArray(q.rooms) && q.rooms.length) {
-      const roomNames = q.rooms.map((r: any) => r.name).filter(Boolean).join(", ");
-      if (roomNames) lines.push(`  Rooms: ${roomNames}`);
+      for (const room of q.rooms) {
+        if (!room) continue;
+        lines.push(`  Room: ${room.name || "Unnamed"}`);
+        if (Array.isArray(room.lineItems) && room.lineItems.length) {
+          for (const item of room.lineItems) {
+            if (!item) continue;
+            const qty = item.qty ?? item.quantity ?? 1;
+            const price = item.unitPrice ?? item.price ?? 0;
+            lines.push(`    - ${item.productName || item.name || "Unknown"} (qty: ${qty}, unit price: ₹${price})`);
+          }
+        }
+      }
     }
     lines.push("");
   }
