@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useAuthContext } from "@/components/providers/AuthProvider";
+import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/Button";
 
 interface UserMenuProps {
@@ -17,6 +18,9 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
     <div className={`border-t border-zinc-200 p-4 dark:border-zinc-800 transition-all duration-300 ${collapsed ? "flex flex-col items-center gap-4 px-2" : ""}`}>
       {collapsed ? (
         <>
+          <div className="flex items-center justify-center">
+            <ThemeToggle />
+          </div>
           <div className="relative group/avatar">
             {user.photoURL ? (
               <Image
@@ -58,6 +62,9 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
         </>
       ) : (
         <>
+          <div className="mb-3 flex items-center justify-between">
+            <ThemeToggle />
+          </div>
           <div className="mb-3 flex items-center gap-3">
             {user.photoURL ? (
               <Image
