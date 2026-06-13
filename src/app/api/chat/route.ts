@@ -41,23 +41,41 @@ function formatQuotesContext(quotes: any[]): string {
     if (q.projectName) lines.push(`  Project: ${q.projectName}`);
     if (q.clientPhone) lines.push(`  Phone: ${q.clientPhone}`);
     if (q.clientAddress) lines.push(`  Address: ${q.clientAddress}`);
-    if (q.grandTotal !== undefined) lines.push(`  Grand Total: ₹${Number(q.grandTotal).toLocaleString("en-IN")}`);
     if (q.status) lines.push(`  Status: ${q.status}`);
     if (q.createdAt) lines.push(`  Created: ${new Date(q.createdAt).toLocaleDateString("en-IN")}`);
+
+    // Section discounts
+    const sd = q.sectionDiscounts || {};
+    if (typeof sd === "object" && Object.keys(sd).length) {
+      lines.push(`  Section Discounts: ${Object.entries(sd).map(([k, v]) => `${k}: ${v}%`).join(", ")}`);
+    } else if (typeof q.discount === "number") {
+      lines.push(`  Discount: ${q.discount}%`);
+    }
+
+    // Rooms and products
     if (Array.isArray(q.rooms) && q.rooms.length) {
       for (const room of q.rooms) {
         if (!room) continue;
-        lines.push(`  Room: ${room.name || "Unnamed"}`);
-        if (Array.isArray(room.lineItems) && room.lineItems.length) {
-          for (const item of room.lineItems) {
+        lines.push(`  Room/Zone: ${room.name || "Unnamed"}`);
+        const products = room.products || room.lineItems || [];
+        if (Array.isArray(products) && products.length) {
+          for (const item of products) {
             if (!item) continue;
             const qty = item.qty ?? item.quantity ?? 1;
-            const price = item.unitPrice ?? item.price ?? 0;
-            lines.push(`    - ${item.productName || item.name || "Unknown"} (qty: ${qty}, unit price: ₹${price})`);
+            const unitPrice = item.unitPrice ?? item.price ?? item.gsp ?? 0;
+            const name = item.productName ?? item.name ?? "Unknown";
+            const category = item.category ?? "";
+            lines.push(`    - ${name}${category ? ` [${category}]` : ""} | qty: ${qty} | unit price: ₹${unitPrice} | subtotal: ₹${qty * unitPrice}`);
           }
         }
       }
     }
+
+    // Pricing summary
+    if (q.productSubtotal !== undefined) lines.push(`  Product Subtotal (MRP): ₹${q.productSubtotal}`);
+    if (q.totalDiscountAmount !== undefined) lines.push(`  Total Discount: ₹${q.totalDiscountAmount}`);
+    if (q.totalInstallation !== undefined) lines.push(`  Installation: ₹${q.totalInstallation}`);
+    if (q.grandTotal !== undefined) lines.push(`  Grand Total (incl. GST): ₹${q.grandTotal}`);
     lines.push("");
   }
   return lines.join("\n");
@@ -649,12 +667,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const systemPrompt = `You are SOP-Bot, an internal assistant for Galaxy Home Automation LLP — a home automation company in Mumbai working exclusively with Zigbee protocol. You help staff answer questions about company SOPs, pricing, warranties, installation procedures, and live project data.
+    const systemPrompt = `You are SOP-Bot, an internal assistant for Galaxy Home Automation LLP — a home automation company in Mumbai working exclusively with Zigbee protocol. You help staff answer questions about company SOPs, pricing, warranties, installation procedures, live project data, and quotations.
 
-Always be concise, accurate, and professional. If you don't know something, say so clearly. Format responses in clean markdown.
+Always be concise, accurate, and professional. Format responses in clean markdown.
+
+PRICING CALCULATION RULES (use these when asked about discounts or totals):
+- Each product category can have its own discount % (sectionDiscounts)
+- Discounted unit price = round(unitPrice × (1 - discount%/100))
+- Discounted subtotal per item = discounted unit price × qty
+- Installation charge: LCD_PANELS = 0%, LOCKS = 10%, all others = 15% of discounted subtotal
+- GST = 18% applied on (discounted subtotal + installation)
+- Grand Total = discounted subtotal + installation + GST
+- When user asks "what if discount is X%", recalculate using the above formula on the product data provided
 
 ${GALAXY_STATIC_CONTEXT}
-${dynamicContext ? `\n---\nLIVE PROJECT DATA:\n${dynamicContext}` : ""}`;
+${dynamicContext ? `\n---\nLIVE DATA:\n${dynamicContext}` : ""}`;
 
     let answer: string;
     if (model === "ollama") {
