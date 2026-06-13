@@ -606,16 +606,17 @@ export async function POST(req: NextRequest) {
 
     const answeredBy = model === "ollama" ? "ollama" : "gemini";
 
-    // 1. Named-project first-pass: if message contains a known project/client name,
-    //    return formatted data immediately without hitting the LLM.
-    const namedProject = await findNamedProjectInMessage(message);
-    if (namedProject) {
-      const queryType = detectProjectQueryType(message);
-      return NextResponse.json({
-        answer: formatByQueryType(queryType, namedProject),
-        source: "Live Project Data",
-        answeredBy,
-      });
+    // 1. Named-project first-pass — skip if user is asking about quotations
+    if (!isQuotationRelated(message)) {
+      const namedProject = await findNamedProjectInMessage(message);
+      if (namedProject) {
+        const queryType = detectProjectQueryType(message);
+        return NextResponse.json({
+          answer: formatByQueryType(queryType, namedProject),
+          source: "Live Project Data",
+          answeredBy,
+        });
+      }
     }
 
     // 2. Recent sent-items query
