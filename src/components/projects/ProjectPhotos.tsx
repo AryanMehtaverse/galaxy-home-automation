@@ -107,7 +107,7 @@ export function ProjectPhotos({ projectId, project }: ProjectPhotosProps) {
   const renderPhotoCard = (photo: ProjectPhoto) => (
     <div
       key={photo.id}
-      className="group aspect-square relative rounded-xl border border-zinc-150 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/20 overflow-hidden shadow-sm hover:shadow-md hover:ring-1 hover:ring-indigo-500/25 transition-all animate-fade-in"
+      className="group aspect-square relative rounded-xl border border-zinc-150 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/20 overflow-hidden shadow-sm hover:shadow-md hover:ring-1 hover:ring-amber-500/25 transition-all animate-fade-in"
     >
       {/* Image element */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -159,7 +159,7 @@ export function ProjectPhotos({ projectId, project }: ProjectPhotosProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-150 pb-4 dark:border-zinc-800">
         <div>
           <h2 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             Site Images ({photos.length})
@@ -233,14 +233,14 @@ export function ProjectPhotos({ projectId, project }: ProjectPhotosProps) {
             <div className="mt-4 flex items-center justify-center gap-4">
               <button
                 onClick={triggerGalleryUpload}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                className="text-xs font-semibold text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300"
               >
                 Choose from Gallery
               </button>
               <span className="text-zinc-300 dark:text-zinc-700">|</span>
               <button
                 onClick={triggerCameraUpload}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                className="text-xs font-semibold text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300"
               >
                 Take Photo
               </button>
@@ -256,7 +256,7 @@ export function ProjectPhotos({ projectId, project }: ProjectPhotosProps) {
                 key={`upload-skeleton-${i}`}
                 className="aspect-square relative rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/20 flex flex-col items-center justify-center space-y-2 animate-pulse"
               >
-                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
                   <Spinner className="!h-5 !w-5" />
                 </div>
                 <span className="text-[10px] font-medium text-zinc-400">Uploading...</span>

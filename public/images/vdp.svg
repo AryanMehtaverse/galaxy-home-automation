@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="16" fill="#F0FDF4"/>
+  <rect x="60" y="40" width="80" height="120" rx="10" fill="#166534"/>
+  <rect x="67" y="50" width="66" height="55" rx="4" fill="#4ADE80" opacity="0.3"/>
+  <circle cx="100" cy="58" r="14" fill="#15803D"/>
+  <circle cx="100" cy="58" r="8" fill="#86EFAC"/>
+  <circle cx="100" cy="58" r="3" fill="#166534"/>
+  <rect x="75" y="115" width="50" height="12" rx="3" fill="#15803D"/>
+  <circle cx="100" cy="143" r="8" fill="#4ADE80"/>
+  <text x="100" y="178" font-size="11" text-anchor="middle" fill="#16A34A" font-family="sans-serif" font-weight="600">VIDEO DOORBELL</text>
+</svg>

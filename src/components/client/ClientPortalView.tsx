@@ -50,13 +50,13 @@ export function ClientPortalView({ project, onLogout }: ClientPortalViewProps) {
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Premium Header */}
       <header className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white/60 p-6 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/60 shadow-lg">
-        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between relative z-10">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 uppercase tracking-wider">
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 uppercase tracking-wider">
                 Client Portal
               </span>
               {project.clientAccessCode && (
@@ -190,13 +190,13 @@ export function ClientPortalView({ project, onLogout }: ClientPortalViewProps) {
                   key={idx}
                   className="rounded-xl border border-zinc-150 bg-zinc-50/50 p-4 dark:border-zinc-800/80 dark:bg-zinc-950/20"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     {contact.designation}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {contact.name || "Unnamed"}
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-500 font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  <p className="mt-0.5 text-xs text-zinc-500 font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     <a href={`tel:${contact.phone}`}>{contact.phone}</a>
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export function ClientPortalView({ project, onLogout }: ClientPortalViewProps) {
               <div
                 key={photo.id}
                 onClick={() => setLightboxUrl(photo.url)}
-                className="group aspect-square relative rounded-xl border border-zinc-150 dark:border-zinc-800/80 bg-zinc-50 overflow-hidden shadow-sm hover:shadow-md hover:ring-1 hover:ring-indigo-500/25 transition-all cursor-zoom-in"
+                className="group aspect-square relative rounded-xl border border-zinc-150 dark:border-zinc-800/80 bg-zinc-50 overflow-hidden shadow-sm hover:shadow-md hover:ring-1 hover:ring-amber-500/25 transition-all cursor-zoom-in"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

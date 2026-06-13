@@ -47,7 +47,7 @@ export function SequentialTaskList({
                     ? "border-emerald-500 bg-emerald-500 text-white"
                     : locked
                       ? "border-zinc-300 bg-zinc-100 text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800"
-                      : "border-indigo-500 bg-white text-indigo-600 dark:bg-zinc-900 dark:text-indigo-400"
+                      : "border-amber-500 bg-white text-amber-600 dark:bg-zinc-900 dark:text-amber-400"
                 }`}
               >
                 {task.completed ? "✓" : index + 1}

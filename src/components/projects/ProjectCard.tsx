@@ -26,7 +26,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Link href={`/projects/${project.id}`}>
       <Card
         overdue={overdue}
-        className="cursor-pointer transition-all hover:shadow-md hover:ring-1 hover:ring-indigo-500/20"
+        className="cursor-pointer transition-all hover:shadow-md hover:ring-1 hover:ring-amber-500/20"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

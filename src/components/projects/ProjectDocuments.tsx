@@ -103,7 +103,7 @@ function FileTypeIcon({ fileType, className }: { fileType?: "pdf" | "image" | "e
 
 function fileIconColor(fileType?: "pdf" | "image" | "excel") {
   if (fileType === "pdf") return "text-red-500";
-  if (fileType === "image") return "text-blue-500";
+  if (fileType === "image") return "text-amber-500";
   return "text-green-600";
 }
 
@@ -282,7 +282,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
           <button
             onClick={() => addInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-50 flex-shrink-0"
+            className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:underline disabled:opacity-50 flex-shrink-0"
           >
             <UploadIcon className="h-3.5 w-3.5" />
             Add more
@@ -297,7 +297,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
             <button
               onClick={() => addInputRef.current?.click()}
               disabled={uploading}
-              className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-200 dark:border-zinc-700 p-4 text-sm text-zinc-500 dark:text-zinc-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-200 dark:border-zinc-700 p-4 text-sm text-zinc-500 dark:text-zinc-400 hover:border-amber-300 dark:hover:border-amber-700 hover:text-amber-600 dark:hover:text-amber-400 transition-colors disabled:opacity-50"
             >
               <UploadIcon className="h-5 w-5" />
               {uploading ? "Uploading…" : "Upload files"}
@@ -305,7 +305,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
             <button
               onClick={() => setShowAddLink(!showAddLink)}
               disabled={uploading}
-              className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
               <LinkIcon className="h-3.5 w-3.5" />
               Paste a link instead
@@ -325,7 +325,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
                     {item.type === "link" ? (
-                      <LinkIcon className="h-5 w-5 text-indigo-400" />
+                      <LinkIcon className="h-5 w-5 text-amber-400" />
                     ) : (
                       <FileTypeIcon fileType={item.fileType} className={`h-5 w-5 ${fileIconColor(item.fileType)}`} />
                     )}
@@ -346,7 +346,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      className="rounded px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
                       {item.type === "link" ? "Open" : "View"}
                     </a>
@@ -355,7 +355,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
                         <button
                           onClick={() => replacingIndex === index ? cancelReplace() : startReplace(index)}
                           disabled={uploading}
-                          className="rounded px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                          className="rounded px-2 py-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
                         >
                           Replace
                         </button>
@@ -374,13 +374,13 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
 
               {/* Replace panel */}
               {canEdit && replacingIndex === index && (
-                <div className="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/20 p-3 flex flex-col gap-2">
+                <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 p-3 flex flex-col gap-2">
                   {replaceMode === null && (
                     <div className="flex flex-wrap gap-2 items-center">
                       <button
                         onClick={() => { setReplaceMode("file"); setTimeout(() => replaceInputRef.current?.click(), 0); }}
                         disabled={uploading}
-                        className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-amber-400 dark:hover:border-amber-600 transition-colors disabled:opacity-50"
                       >
                         <UploadIcon className="h-3.5 w-3.5" />
                         Upload new file
@@ -388,7 +388,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
                       <button
                         onClick={() => setReplaceMode("link")}
                         disabled={uploading}
-                        className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-amber-400 dark:hover:border-amber-600 transition-colors disabled:opacity-50"
                       >
                         <LinkIcon className="h-3.5 w-3.5" />
                         Replace with link
@@ -408,12 +408,12 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
                         placeholder="https://..."
                         disabled={uploading}
                         autoFocus
-                        className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                        className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                       />
                       <button
                         onClick={handleReplaceLink}
                         disabled={uploading || !replaceLinkInput.trim()}
-                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                        className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50 transition-colors"
                       >
                         Save
                       </button>
@@ -433,7 +433,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
               <button
                 onClick={() => addInputRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-200 dark:border-zinc-700 py-2.5 text-xs text-zinc-400 dark:text-zinc-500 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-200 dark:border-zinc-700 py-2.5 text-xs text-zinc-400 dark:text-zinc-500 hover:border-amber-300 dark:hover:border-amber-700 hover:text-amber-600 dark:hover:text-amber-400 transition-colors disabled:opacity-50"
               >
                 <UploadIcon className="h-4 w-4" />
                 {uploading ? "Uploading…" : "Add more files"}
@@ -441,7 +441,7 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
               <button
                 onClick={() => setShowAddLink(!showAddLink)}
                 disabled={uploading}
-                className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               >
                 <LinkIcon className="h-3.5 w-3.5" />
                 Add a link
@@ -462,12 +462,12 @@ export function DocumentBox({ title, subtitle, items, canEdit, uploadedBy, onSav
             placeholder="https://..."
             disabled={uploading}
             autoFocus
-            className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
           />
           <button
             onClick={handleAddLink}
             disabled={uploading || !linkInput.trim()}
-            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50 transition-colors"
           >
             Add
           </button>

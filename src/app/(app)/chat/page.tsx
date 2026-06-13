@@ -158,7 +158,7 @@ export default function ChatPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-3 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-600 text-white shrink-0">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
@@ -175,7 +175,7 @@ export default function ChatPage() {
                 onClick={() => setSelectedModel("gemini")}
                 className={`px-3 py-1.5 transition-colors ${
                   selectedModel === "gemini"
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-amber-600 text-white"
                     : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
@@ -185,7 +185,7 @@ export default function ChatPage() {
                 onClick={() => setSelectedModel("ollama")}
                 className={`px-3 py-1.5 transition-colors ${
                   selectedModel === "ollama"
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-amber-600 text-white"
                     : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
@@ -210,7 +210,7 @@ export default function ChatPage() {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "bot" && (
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white mr-2 mt-0.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-white mr-2 mt-0.5">
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
@@ -220,7 +220,7 @@ export default function ChatPage() {
               <div
                 className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-indigo-600 text-white rounded-tr-sm whitespace-pre-wrap"
+                    ? "bg-amber-600 text-white rounded-tr-sm whitespace-pre-wrap"
                     : msg.error
                     ? "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-tl-sm whitespace-pre-wrap"
                     : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-tl-sm"
@@ -253,7 +253,7 @@ export default function ChatPage() {
                     <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium ${
                       msg.answeredBy === "ollama"
                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                        : "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                     }`}>
                       {msg.answeredBy === "ollama" ? "Qwen Local" : "Gemini"}
                     </span>
@@ -276,7 +276,7 @@ export default function ChatPage() {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white mr-2 mt-0.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-600 text-white mr-2 mt-0.5">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
@@ -303,7 +303,7 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-3">
-        <div className="flex items-end gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 transition-colors">
+        <div className="flex items-end gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3 py-2 focus-within:border-amber-500 dark:focus-within:border-amber-500 transition-colors">
           <textarea
             ref={inputRef}
             value={input}
@@ -323,7 +323,7 @@ export default function ChatPage() {
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

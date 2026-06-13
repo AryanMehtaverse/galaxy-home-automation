@@ -34,7 +34,7 @@ export function LightsCategoryNodeContent({
                 onClick={() => onToggleCategory(cat.id)}
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   selected
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-amber-600 text-white"
                     : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 } disabled:cursor-not-allowed disabled:opacity-50`}
               >

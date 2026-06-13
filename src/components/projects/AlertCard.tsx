@@ -53,7 +53,7 @@ export function AlertCard({ alert }: AlertCardProps) {
   return (
     <Link href={`/projects/${project.id}`} className="block">
       <div
-        className={`rounded-xl border ${currentColors.border} ${currentColors.bg} p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-1 hover:ring-indigo-500/20 duration-200`}
+        className={`rounded-xl border ${currentColors.border} ${currentColors.bg} p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-1 hover:ring-amber-500/20 duration-200`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -61,14 +61,14 @@ export function AlertCard({ alert }: AlertCardProps) {
               <span className="text-lg leading-none" role="img" aria-label="Alert Icon">
                 {currentColors.icon}
               </span>
-              <span className="truncate hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              <span className="truncate hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                 {project.name}
               </span>
             </h3>
             <div className="mt-1 flex flex-wrap gap-1.5">
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
                 alert.type === "project"
-                  ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-900/30"
+                  ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30"
                   : "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400 border border-teal-200/50 dark:border-teal-900/30"
               }`}>
                 {alert.type === "project" ? "Project Deadline" : "Task Deadline"}
@@ -98,7 +98,7 @@ export function AlertCard({ alert }: AlertCardProps) {
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-zinc-500 dark:text-zinc-400">Task:</span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[200px]" title={alert.taskName}>
+              <span className="font-bold text-amber-600 dark:text-amber-400 truncate max-w-[200px]" title={alert.taskName}>
                 {alert.taskName}
               </span>
             </div>
@@ -116,7 +116,7 @@ export function AlertCard({ alert }: AlertCardProps) {
           <span className={`text-sm font-bold ${currentColors.text}`}>
             {remainingText}
           </span>
-          <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1 hover:underline">
+          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1 hover:underline">
             Manage workflow
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

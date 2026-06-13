@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="16" fill="#F0FDFA"/>
+  <rect x="40" y="70" width="120" height="70" rx="10" fill="white" stroke="#99F6E4" stroke-width="1.5"/>
+  <circle cx="100" cy="105" r="18" fill="#14B8A6"/>
+  <circle cx="100" cy="105" r="8" fill="white"/>
+  <line x1="100" y1="40" x2="100" y2="70" stroke="#14B8A6" stroke-width="2"/>
+  <line x1="65" y1="52" x2="82" y2="75" stroke="#14B8A6" stroke-width="2"/>
+  <line x1="135" y1="52" x2="118" y2="75" stroke="#14B8A6" stroke-width="2"/>
+  <circle cx="100" cy="38" r="5" fill="#14B8A6"/>
+  <circle cx="63" cy="50" r="5" fill="#14B8A6"/>
+  <circle cx="137" cy="50" r="5" fill="#14B8A6"/>
+  <text x="100" y="162" font-size="11" text-anchor="middle" fill="#14B8A6" font-family="sans-serif" font-weight="600">HUB</text>
+</svg>

@@ -18,7 +18,7 @@ export function ProgressBar({
         className={`flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700 ${height}`}
       >
         <div
-          className={`${height} rounded-full bg-indigo-500 transition-all duration-500`}
+          className={`${height} rounded-full bg-amber-500 transition-all duration-500`}
           style={{ width: `${clamped}%` }}
         />
       </div>

@@ -43,7 +43,7 @@ export default function InventoryDetailPage({ params }: InventoryDetailPageProps
       <div>
         <Link
           href="/dashboard/inventory"
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 font-medium hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-500 font-medium hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

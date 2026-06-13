@@ -32,7 +32,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                 unoptimized
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-sm font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                 {user.displayName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -76,7 +76,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                 unoptimized
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-sm font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                 {user.displayName.charAt(0).toUpperCase()}
               </div>
             )}

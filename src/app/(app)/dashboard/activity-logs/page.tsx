@@ -105,7 +105,7 @@ export default function ActivityLogsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent"></div>
           <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Verifying permissions...</span>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function ActivityLogsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2.5">
-            <svg className="h-7 w-7 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-7 w-7 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
             Activity Logs
@@ -160,7 +160,7 @@ export default function ActivityLogsPage() {
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             >
               <option value="">All Projects</option>
               {projectsList.map((proj) => (
@@ -178,7 +178,7 @@ export default function ActivityLogsPage() {
             <select
               value={selectedUser}
               onChange={(e) => setSelectedUser(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             >
               <option value="">All Users</option>
               {usersList.map((userOpt) => (
@@ -196,7 +196,7 @@ export default function ActivityLogsPage() {
             <select
               value={selectedActionType}
               onChange={(e) => setSelectedActionType(e.target.value)}
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             >
               <option value="">All Actions</option>
               {actionTypesList.map((action) => (
@@ -212,7 +212,7 @@ export default function ActivityLogsPage() {
           <div className="mt-4 flex justify-end">
             <button
               onClick={resetFilters}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              className="text-xs font-semibold text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300"
             >
               Clear Filters
             </button>
@@ -223,7 +223,7 @@ export default function ActivityLogsPage() {
       {/* Logs Content */}
       {loadingLogs ? (
         <div className="rounded-xl border border-zinc-200 bg-white p-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mb-3"></div>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-amber-600 border-t-transparent mb-3"></div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading activity timeline...</p>
         </div>
       ) : filteredLogs.length === 0 ? (
@@ -273,7 +273,7 @@ export default function ActivityLogsPage() {
                       ) : (
                         <Link
                           href={`/projects/${log.projectId}`}
-                          className="text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold"
+                          className="text-amber-600 hover:text-amber-500 hover:underline dark:text-amber-400 dark:hover:text-amber-300 font-semibold"
                         >
                           {log.projectName}
                         </Link>

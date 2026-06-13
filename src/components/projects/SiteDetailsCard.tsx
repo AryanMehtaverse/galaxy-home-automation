@@ -191,7 +191,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
       <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900 shadow-sm transition-all">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
             Edit Project & Site Details
@@ -319,7 +319,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
               {contacts.map((contact, index) => (
                 <div key={index} className="rounded-xl border border-zinc-150 bg-zinc-50/50 p-4 dark:border-zinc-800 space-y-4">
                   <div className="flex items-center justify-between border-b border-zinc-150 pb-2 dark:border-zinc-800">
-                    <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                       Contact #{index + 1} {index < 2 && <span className="text-red-500 font-normal text-[10px] lowercase">(required)</span>}
                     </span>
                     {contacts.length > 2 && (
@@ -419,7 +419,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
     <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900 shadow-sm transition-all">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-          <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -446,7 +446,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
           {canEditProject(user, project) && (
             <button
               onClick={() => setIsEditing(true)}
-              className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              className="mt-2 text-xs font-semibold text-amber-600 hover:text-amber-500 dark:text-amber-400 dark:hover:text-amber-300"
             >
               Add Details Now
             </button>
@@ -467,7 +467,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                 {clientPhone ? (
                   <a
                     href={`tel:${clientPhone}`}
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300 break-all"
+                    className="text-sm font-medium text-amber-600 hover:text-amber-500 hover:underline dark:text-amber-400 dark:hover:text-amber-300 break-all"
                   >
                     {clientPhone}
                   </a>
@@ -539,7 +539,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                     href={isValidHttpUrl(googleMapsLink) ? googleMapsLink : `https://${googleMapsLink.replace(/^(https?:\/\/)?/, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300 inline-flex items-center gap-1"
+                    className="text-sm font-semibold text-amber-600 hover:text-amber-500 hover:underline dark:text-amber-400 dark:hover:text-amber-300 inline-flex items-center gap-1"
                   >
                     Open Google Maps
                   </a>
@@ -575,7 +575,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
               >
                 <div className="min-w-0 flex-1 pr-2">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="inline-block rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 uppercase tracking-wider">
+                    <span className="inline-block rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 uppercase tracking-wider">
                       {contact.designation}
                     </span>
                   </div>
@@ -591,7 +591,7 @@ export function SiteDetailsCard({ project }: SiteDetailsCardProps) {
                 
                 <a
                   href={`tel:${contact.phone}`}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:text-indigo-400 dark:hover:bg-indigo-950/60 flex-shrink-0"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-950/60 flex-shrink-0"
                   title={contact.name ? `Call ${contact.name}` : `Call ${contact.designation}`}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -52,7 +52,7 @@ function NotesSection({ nodeId, initialNotes, disabled, onNodeUpdate }: NotesSec
         disabled={disabled}
         placeholder="Add notes for this step..."
         rows={2}
-        className="w-full rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 disabled:opacity-60"
+        className="w-full rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 disabled:opacity-60"
       />
     </div>
   );
@@ -100,7 +100,7 @@ function DeadlineSection({ nodeId, initialDeadline, disabled, onNodeUpdate }: De
           value={localDeadline}
           onChange={handleChange}
           disabled={disabled}
-          className="rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 disabled:opacity-60"
+          className="rounded-lg border border-zinc-200 bg-white p-2 text-sm text-zinc-800 placeholder-zinc-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 disabled:opacity-60"
         />
         {localDeadline && !disabled && (
           <button
@@ -131,7 +131,7 @@ function AddStepDivider({ onClick, isFirst = false, isLast = false }: AddStepDiv
     <div className="group relative flex h-6 items-center justify-start pl-[2.25rem] select-none">
       {/* Vertical line connecting the steps */}
       <div
-        className={`absolute left-[1.65rem] w-0.5 bg-zinc-300 dark:bg-zinc-700 group-hover:bg-indigo-400 dark:group-hover:bg-indigo-600 ${
+        className={`absolute left-[1.65rem] w-0.5 bg-zinc-300 dark:bg-zinc-700 group-hover:bg-amber-400 dark:group-hover:bg-amber-600 ${
           isFirst
             ? "top-1/2 bottom-0"
             : isLast
@@ -145,7 +145,7 @@ function AddStepDivider({ onClick, isFirst = false, isLast = false }: AddStepDiv
       <button
         type="button"
         onClick={onClick}
-        className="z-10 flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-zinc-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:border-indigo-400 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+        className="z-10 flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-zinc-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:border-amber-400 hover:text-amber-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-amber-500 dark:hover:text-amber-400"
       >
         <span className="text-[11px] leading-none">+</span> Add Step
       </button>
@@ -238,7 +238,7 @@ export function WorkflowNodePanel({
                 type="button"
                 disabled={!canMoveUp}
                 onClick={() => onMoveUp()}
-                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
+                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-amber-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-amber-400 ${
                   !canMoveUp ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
                 }`}
                 title="Move Step Up"
@@ -253,7 +253,7 @@ export function WorkflowNodePanel({
                 type="button"
                 disabled={!canMoveDown}
                 onClick={() => onMoveDown()}
-                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-indigo-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-indigo-400 ${
+                className={`flex h-6 w-6 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-500 shadow-sm transition-all hover:bg-zinc-50 hover:text-amber-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-amber-400 ${
                   !canMoveDown ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
                 }`}
                 title="Move Step Down"

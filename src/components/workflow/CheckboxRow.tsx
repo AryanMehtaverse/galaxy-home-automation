@@ -34,7 +34,7 @@ export function CheckboxRow({
         checked={checked}
         disabled={isDisabled}
         onChange={onToggle}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-amber-600 focus:ring-amber-500 disabled:cursor-not-allowed"
       />
       <span className="min-w-0 flex-1">
         <span

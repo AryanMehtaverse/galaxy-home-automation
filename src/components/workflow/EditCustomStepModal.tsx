@@ -110,7 +110,7 @@ export function EditCustomStepModal({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add detailed notes for this step..."
             rows={3}
-            className="w-full rounded-lg border border-zinc-200 bg-white p-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+            className="w-full rounded-lg border border-zinc-200 bg-white p-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
         </div>
 

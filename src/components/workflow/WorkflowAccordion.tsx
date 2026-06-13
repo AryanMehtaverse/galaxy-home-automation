@@ -61,7 +61,7 @@ export function WorkflowAccordion({
             setOpen(!open);
           }
         }}
-        className="flex w-full items-start gap-3 px-4 py-4 text-left sm:px-5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-t-xl"
+        className="flex w-full items-start gap-3 px-4 py-4 text-left sm:px-5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-t-xl"
       >
         {dragHandle}
 
@@ -71,7 +71,7 @@ export function WorkflowAccordion({
               ? "bg-emerald-500 text-white"
               : locked
                 ? "bg-zinc-200 text-zinc-400 dark:bg-zinc-700"
-                : "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
           }`}
         >
           {completed ? "✓" : locked ? "🔒" : stepNumber}

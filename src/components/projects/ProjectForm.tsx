@@ -230,7 +230,7 @@ export function ProjectForm() {
           {contacts.map((contact, index) => (
             <div key={index} className="rounded-xl border border-zinc-150 bg-zinc-50/50 p-4 dark:border-zinc-800 space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-150 pb-2 dark:border-zinc-800">
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                   Contact #{index + 1} {index < 2 && <span className="text-red-500 font-normal text-[10px] lowercase">(required)</span>}
                 </span>
                 {contacts.length > 2 && (

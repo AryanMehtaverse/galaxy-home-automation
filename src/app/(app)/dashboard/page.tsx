@@ -99,12 +99,12 @@ export default function DashboardPage() {
                     {filteredProjects.length}
                   </span>
                   {activeFilter && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                       <span>·</span>
                       <span>Filtered by {getFilterLabel()}</span>
                       <button
                         onClick={() => setActiveFilter(null)}
-                        className="ml-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/30 p-0.5"
+                        className="ml-1 rounded hover:bg-amber-50 dark:hover:bg-amber-950/30 p-0.5"
                         title="Clear filter"
                       >
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name, client, code, manager, address..."
-                    className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-10 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
                   {searchQuery && (
                     <button
