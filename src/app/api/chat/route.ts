@@ -6,6 +6,53 @@ import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { fetchAuditLogs } from "@/lib/firestore/audit";
 import { db } from "@/lib/firebase";
 
+// ── Quotation helpers ─────────────────────────────────────────────────────
+
+const RTDB = "https://galaxy-quotation-default-rtdb.firebaseio.com";
+
+async function fetchAllQuotes(): Promise<any[]> {
+  const res = await fetch(`${RTDB}/quotes.json`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (!data) return [];
+  return Object.values(data) as any[];
+}
+
+const QUOTATION_KEYWORDS = [
+  "quote", "quotation", "quot", "boq", "bill of quantities",
+  "invoice", "estimate", "proposal", "pricing", "rate card",
+  "how much", "total amount", "grand total", "pipeline",
+  "saved quotes", "recent quotes", "all quotes",
+];
+
+function isQuotationRelated(message: string): boolean {
+  const lower = message.toLowerCase();
+  return QUOTATION_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+function formatQuotesContext(quotes: any[]): string {
+  if (!quotes.length) return "No quotations found.";
+  const lines = ["Quotations in Galaxy System:\n"];
+  const sorted = [...quotes].sort((a, b) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  );
+  for (const q of sorted.slice(0, 20)) {
+    lines.push(`Quote #${q.quoteNumber || "?"} — ${q.clientName || "Unknown Client"}`);
+    if (q.projectName) lines.push(`  Project: ${q.projectName}`);
+    if (q.clientPhone) lines.push(`  Phone: ${q.clientPhone}`);
+    if (q.clientAddress) lines.push(`  Address: ${q.clientAddress}`);
+    if (q.grandTotal !== undefined) lines.push(`  Grand Total: ₹${Number(q.grandTotal).toLocaleString("en-IN")}`);
+    if (q.status) lines.push(`  Status: ${q.status}`);
+    if (q.createdAt) lines.push(`  Created: ${new Date(q.createdAt).toLocaleDateString("en-IN")}`);
+    if (Array.isArray(q.rooms) && q.rooms.length) {
+      const roomNames = q.rooms.map((r: any) => r.name).filter(Boolean).join(", ");
+      if (roomNames) lines.push(`  Rooms: ${roomNames}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
 // ── Query type detection ───────────────────────────────────────────────────
 
 type QueryType =
@@ -570,13 +617,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Fall through to LLM with optional project context injected into system prompt
+    // 4. Fall through to LLM with optional project/quotation context
     let dynamicContext = "";
     let source = "Galaxy SOP Knowledge Base";
 
     if (isProjectRelated(message)) {
       dynamicContext = await fetchAllProjectsContext(message);
       source = "Galaxy SOP Knowledge Base + Live Project Data";
+    }
+
+    if (isQuotationRelated(message)) {
+      try {
+        const quotes = await fetchAllQuotes();
+        const quotesCtx = formatQuotesContext(quotes);
+        dynamicContext += `\n\nLIVE QUOTATION DATA:\n${quotesCtx}`;
+        source = source.includes("Project")
+          ? "Galaxy SOP Knowledge Base + Live Project & Quotation Data"
+          : "Galaxy SOP Knowledge Base + Live Quotation Data";
+      } catch (e) {
+        console.error("Failed to fetch quotations:", e);
+      }
     }
 
     const systemPrompt = `You are SOP-Bot, an internal assistant for Galaxy Home Automation LLP — a home automation company in Mumbai working exclusively with Zigbee protocol. You help staff answer questions about company SOPs, pricing, warranties, installation procedures, and live project data.
