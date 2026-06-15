@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { Lead } from '@/types/lead'
 import { fetchLeads, createCallLog } from '@/lib/leadsService'
-import { SAMPLE_LEADS } from '@/data/sampleLeads'
 import { StatusBadge, PriorityBadge } from '@/components/leads/StatusBadge'
 import { LogCallModal } from '@/components/leads/LogCallModal'
 import type { CallLog } from '@/types/lead'
@@ -64,11 +63,10 @@ export default function FollowUpsPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      let data = await fetchLeads()
-      if (data.length === 0) data = SAMPLE_LEADS
+      const data = await fetchLeads()
       setLeads(data)
     } catch {
-      setLeads(SAMPLE_LEADS)
+      setLeads([])
     } finally {
       setLoading(false)
     }

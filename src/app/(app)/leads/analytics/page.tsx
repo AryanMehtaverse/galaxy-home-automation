@@ -8,7 +8,6 @@ import {
 } from 'recharts'
 import type { Lead, CallLog } from '@/types/lead'
 import { fetchLeads, fetchCallLogs } from '@/lib/leadsService'
-import { SAMPLE_LEADS, SAMPLE_CALL_LOGS } from '@/data/sampleLeads'
 
 const GOLD = '#C9A840'
 const COLORS = ['#C9A840', '#60a5fa', '#a78bfa', '#34d399', '#f97316', '#f43f5e', '#818cf8', '#10b981', '#6b7280', '#ef4444']
@@ -38,11 +37,11 @@ export default function AnalyticsPage() {
     try {
       setLoading(true)
       const [l, c] = await Promise.all([fetchLeads(), fetchCallLogs()])
-      setLeads(l.length ? l : SAMPLE_LEADS)
-      setCallLogs(c.length ? c : SAMPLE_CALL_LOGS)
+      setLeads(l)
+      setCallLogs(c)
     } catch {
-      setLeads(SAMPLE_LEADS)
-      setCallLogs(SAMPLE_CALL_LOGS)
+      setLeads([])
+      setCallLogs([])
     } finally {
       setLoading(false)
     }
