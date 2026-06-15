@@ -23,7 +23,7 @@ interface LeadRowProps {
 
 function LeadRow({ lead, highlight, onLogCall }: LeadRowProps) {
   return (
-    <div className={`flex items-center gap-4 rounded-lg border p-4 ${highlight}`}>
+    <div className={`flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:gap-4 ${highlight}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-zinc-100">{lead.name}</span>
@@ -104,9 +104,9 @@ export default function FollowUpsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-100">Follow-ups</h1>
             <p className="mt-1 text-sm text-zinc-500">Stay on top of your scheduled follow-ups</p>
@@ -119,12 +119,12 @@ export default function FollowUpsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-zinc-800">
+        <div className="flex overflow-x-auto border-b border-zinc-800">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              className={`flex items-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium border-b-2 transition-colors -mb-px sm:px-4 ${
                 activeTab === tab.id
                   ? `${tab.activeColor} border-current`
                   : 'border-transparent text-zinc-500 hover:text-zinc-300'

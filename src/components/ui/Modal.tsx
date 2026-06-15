@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         role="dialog"
         aria-modal
         aria-labelledby="modal-title"
-        className="relative w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-zinc-200 bg-white p-4 shadow-xl sm:p-6 dark:border-zinc-800 dark:bg-zinc-900"
       >
         <h2
           id="modal-title"

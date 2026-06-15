@@ -11,7 +11,7 @@ export function MobileNav() {
       <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 lg:hidden dark:border-zinc-800 dark:bg-zinc-950">
         <button
           onClick={() => setOpen(true)}
-          className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          className="rounded-lg p-2 text-[#C9A840] hover:bg-zinc-100 dark:hover:bg-zinc-800"
           aria-label="Open menu"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,6 +36,15 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 w-64 shadow-xl">
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute right-2 top-3 z-10 rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              aria-label="Close menu"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             <Sidebar onNavigate={() => setOpen(false)} />
           </div>
         </div>

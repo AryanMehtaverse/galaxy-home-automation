@@ -100,7 +100,7 @@ export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalPro
         </>
       }
     >
-      <form id="lead-form" onSubmit={handleSubmit} className="mt-4 grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+      <form id="lead-form" onSubmit={handleSubmit} className="mt-4 grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-1 sm:grid-cols-2">
         <Field label="Name *">
           <input className={inputCls} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Rajesh Sharma" required />
         </Field>
@@ -148,12 +148,12 @@ export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalPro
         <Field label="Follow-up Time">
           <input className={inputCls} type="time" value={form.nextFollowUpTime} onChange={(e) => set('nextFollowUpTime', e.target.value)} />
         </Field>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Field label="Address">
             <input className={inputCls} value={form.address} onChange={(e) => set('address', e.target.value)} placeholder="Flat 302, Suncity Apartments, Andheri West" />
           </Field>
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Field label="Notes">
             <textarea className={inputCls + ' resize-none'} rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Additional notes about this lead..." />
           </Field>

@@ -106,7 +106,7 @@ export default function LeadDetailPage() {
   const isOverdue = lead.nextFollowUpDate && lead.nextFollowUpDate < today
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-[1400px]">
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-sm text-zinc-500">
@@ -119,8 +119,8 @@ export default function LeadDetailPage() {
           {/* Left column */}
           <div className="flex-1 min-w-0 space-y-6">
             {/* Lead Info Card */}
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-              <div className="flex items-start justify-between mb-4">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6">
+              <div className="flex items-start justify-between gap-2 mb-4">
                 <div>
                   <h1 className="text-2xl font-bold text-zinc-100">{lead.name}</h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -160,7 +160,7 @@ export default function LeadDetailPage() {
             </div>
 
             {/* Call History Timeline */}
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-zinc-100">Call History</h2>
                 <Button variant="primary" size="sm" onClick={() => setLogOpen(true)}>
