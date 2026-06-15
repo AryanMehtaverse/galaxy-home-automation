@@ -14,8 +14,8 @@ const PAGE_SIZE = 20
 const ALL_STATUSES: LeadStatus[] = ['New Lead', 'Contacted', 'Interested', 'Call Back Later', 'Site Visit Required', 'Quotation Requested', 'Negotiation', 'Won', 'Lost', 'Not Interested']
 const ALL_SOURCES: LeadSource[] = ['IndiaMART', 'Meta Ads', 'Google Ads', 'Website', 'Referral', 'Architect', 'Builder', 'JustDial', 'Cold Calling', 'Walk In', 'Manual Entry', 'Other']
 
-const selectCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
-const inputCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
+const selectCls = 'w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
+const inputCls = 'w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -84,13 +84,13 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-[1600px] space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Lead Manager</h1>
-            <p className="mt-1 text-sm text-zinc-500">Track and manage all your sales leads</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Lead Manager</h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">Track and manage all your sales leads</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Link href="/leads/follow-ups">
@@ -138,7 +138,7 @@ export default function LeadsPage() {
             </select>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-zinc-500 dark:text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
             {(search || filterStatus || filterCity || filterSource || filterAssignee) && (
               <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setPage(1) }}>
                 Clear Filters
@@ -148,11 +148,11 @@ export default function LeadsPage() {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-4">
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-[#C9A840]" />
-              <span className="ml-3 text-sm text-zinc-400">Loading leads…</span>
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-[#C9A840]" />
+              <span className="ml-3 text-sm text-zinc-500 dark:text-zinc-400">Loading leads…</span>
             </div>
           ) : error ? (
             <div className="py-8 text-center text-red-400 text-sm">{error}</div>
@@ -169,7 +169,7 @@ export default function LeadsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
             <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
-            <span className="text-sm text-zinc-400">Page {page} of {totalPages}</span>
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">Page {page} of {totalPages}</span>
             <Button variant="ghost" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next →</Button>
           </div>
         )}

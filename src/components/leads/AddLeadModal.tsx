@@ -20,13 +20,13 @@ interface AddLeadModalProps {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-zinc-400">{label}</label>
+      <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</label>
       {children}
     </div>
   )
 }
 
-const inputCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
+const inputCls = 'w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
 
 export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalProps) {
   const now = new Date().toISOString().split('T')[0]

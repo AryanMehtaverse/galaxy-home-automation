@@ -26,7 +26,7 @@ export function SummaryCards({ leads }: { leads: Lead[] }) {
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
       {cards.map((card) => (
         <div key={card.label} className={`rounded-xl border p-3 ${card.bg}`}>
-          <p className="text-[10px] leading-tight text-zinc-400 sm:text-xs">{card.label}</p>
+          <p className="text-[10px] leading-tight text-zinc-500 dark:text-zinc-400 sm:text-xs">{card.label}</p>
           <p className={`mt-1 text-xl font-bold sm:text-2xl ${card.color}`}>{card.value}</p>
         </div>
       ))}

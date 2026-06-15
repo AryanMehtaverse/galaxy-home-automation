@@ -14,10 +14,10 @@ const COLORS = ['#C9A840', '#60a5fa', '#a78bfa', '#34d399', '#f97316', '#f43f5e'
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{label}</p>
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-5">
+      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500 uppercase tracking-wider">{label}</p>
       <p className="mt-2 text-3xl font-bold text-[#C9A840]">{value}</p>
-      {sub && <p className="mt-1 text-xs text-zinc-500">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{sub}</p>}
     </div>
   )
 }
@@ -51,8 +51,8 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-[#C9A840]" />
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-[#C9A840]" />
       </div>
     )
   }
@@ -98,15 +98,15 @@ export default function AnalyticsPage() {
     .map(([week, calls]) => ({ week, calls }))
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-[1400px] space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Lead Analytics</h1>
-            <p className="mt-1 text-sm text-zinc-500">Performance overview and trends</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Lead Analytics</h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">Performance overview and trends</p>
           </div>
           <Link href="/leads">
-            <button className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors">
+            <button className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
               ← All Leads
             </button>
           </Link>
@@ -123,8 +123,8 @@ export default function AnalyticsPage() {
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Leads by Status */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-300">Leads by Status</h3>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-5">
+            <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Leads by Status</h3>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={statusData} margin={{ top: 0, right: 10, left: -10, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -137,8 +137,8 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Leads by Source */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-300">Leads by Source</h3>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-5">
+            <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Leads by Source</h3>
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie data={sourceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
@@ -156,8 +156,8 @@ export default function AnalyticsPage() {
         {/* Charts Row 2 */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Leads added over last 30 days */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-300">Leads Added — Last 30 Days</h3>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-5">
+            <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Leads Added — Last 30 Days</h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={lineData} margin={{ top: 0, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -170,10 +170,10 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Calls per week */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-300">Calls per Week</h3>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-5">
+            <h3 className="mb-4 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Calls per Week</h3>
             {callWeekData.length === 0 ? (
-              <div className="flex items-center justify-center h-[220px] text-zinc-600 text-sm">No call data yet</div>
+              <div className="flex items-center justify-center h-[220px] text-zinc-400 dark:text-zinc-600 text-sm">No call data yet</div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={callWeekData} margin={{ top: 0, right: 10, left: -10, bottom: 0 }}>

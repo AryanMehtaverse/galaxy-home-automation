@@ -25,20 +25,20 @@ function LeadRow({ lead, highlight, onLogCall }: LeadRowProps) {
     <div className={`flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:gap-4 ${highlight}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-zinc-100">{lead.name}</span>
+          <span className="font-medium text-zinc-900 dark:text-zinc-100">{lead.name}</span>
           <StatusBadge status={lead.status} size="sm" />
           {lead.priority && <PriorityBadge priority={lead.priority} />}
         </div>
-        <p className="mt-0.5 text-xs text-zinc-400 font-mono">{lead.phone} · {lead.city}</p>
+        <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 font-mono">{lead.phone} · {lead.city}</p>
         {lead.nextFollowUpDate && (
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
             Follow-up: {lead.nextFollowUpDate}{lead.nextFollowUpTime ? ` at ${lead.nextFollowUpTime}` : ''}
           </p>
         )}
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <Link href={`/leads/${lead.id}`}>
-          <button className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-700 transition-colors">
+          <button className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
             Open Lead
           </button>
         </Link>
@@ -102,22 +102,22 @@ export default function FollowUpsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Follow-ups</h1>
-            <p className="mt-1 text-sm text-zinc-500">Stay on top of your scheduled follow-ups</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Follow-ups</h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">Stay on top of your scheduled follow-ups</p>
           </div>
           <Link href="/leads">
-            <button className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors">
+            <button className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
               ← All Leads
             </button>
           </Link>
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto border-b border-zinc-800">
+        <div className="flex overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -125,11 +125,11 @@ export default function FollowUpsPage() {
               className={`flex items-center gap-2 whitespace-nowrap px-3 py-3 text-sm font-medium border-b-2 transition-colors -mb-px sm:px-4 ${
                 activeTab === tab.id
                   ? `${tab.activeColor} border-current`
-                  : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
               }`}
             >
               {tab.label}
-              <span className={`rounded-full px-1.5 py-0.5 text-xs font-bold ${activeTab === tab.id ? '' : tab.color} bg-zinc-800`}>
+              <span className={`rounded-full px-1.5 py-0.5 text-xs font-bold ${activeTab === tab.id ? '' : tab.color} bg-zinc-100 dark:bg-zinc-800`}>
                 {tab.count}
               </span>
             </button>
@@ -139,10 +139,10 @@ export default function FollowUpsPage() {
         {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-[#C9A840]" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-[#C9A840]" />
           </div>
         ) : currentLeads.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-zinc-600">
+          <div className="flex flex-col items-center py-16 text-zinc-400 dark:text-zinc-600">
             <svg className="h-12 w-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
