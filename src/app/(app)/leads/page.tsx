@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { Lead, LeadStatus, LeadSource } from '@/types/lead'
 import { fetchLeads, createLead, updateLead, deleteLead } from '@/lib/leadsService'
-import { SAMPLE_LEADS } from '@/data/sampleLeads'
 import { SummaryCards } from '@/components/leads/SummaryCards'
 import { LeadTable } from '@/components/leads/LeadTable'
 import { AddLeadModal } from '@/components/leads/AddLeadModal'
@@ -34,14 +33,7 @@ export default function LeadsPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      let data = await fetchLeads()
-      if (data.length === 0) {
-        // Seed with sample data
-        const created = await Promise.all(
-          SAMPLE_LEADS.map(({ id, ...rest }) => createLead(rest))
-        )
-        data = created
-      }
+      const data = await fetchLeads()
       setLeads(data)
     } catch (e) {
       setError(String(e))
