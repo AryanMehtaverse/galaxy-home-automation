@@ -14,8 +14,8 @@ const PAGE_SIZE = 20
 const ALL_STATUSES: LeadStatus[] = ['New Lead', 'Contacted', 'Interested', 'Call Back Later', 'Site Visit Required', 'Quotation Requested', 'Negotiation', 'Won', 'Lost', 'Not Interested']
 const ALL_SOURCES: LeadSource[] = ['IndiaMART', 'Meta Ads', 'Google Ads', 'Website', 'Referral', 'Architect', 'Builder', 'JustDial', 'Cold Calling', 'Walk In', 'Manual Entry', 'Other']
 
-const selectCls = 'rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
-const inputCls = 'rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840] w-64'
+const selectCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
+const inputCls = 'w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840]'
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -81,15 +81,15 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6">
       <div className="mx-auto max-w-[1600px] space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-zinc-100">Lead Manager</h1>
             <p className="mt-1 text-sm text-zinc-500">Track and manage all your sales leads</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link href="/leads/follow-ups">
               <Button variant="secondary" size="sm">Follow-ups</Button>
             </Link>
@@ -109,31 +109,35 @@ export default function LeadsPage() {
         {!loading && <SummaryCards leads={leads} />}
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="space-y-2">
           <input
             className={inputCls}
             placeholder="Search by name, phone, city..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           />
-          <select className={selectCls} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}>
-            <option value="">All Statuses</option>
-            {ALL_STATUSES.map((s) => <option key={s}>{s}</option>)}
-          </select>
-          <select className={selectCls} value={filterCity} onChange={(e) => { setFilterCity(e.target.value); setPage(1) }}>
-            <option value="">All Cities</option>
-            {cities.map((c) => <option key={c}>{c}</option>)}
-          </select>
-          <select className={selectCls} value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(1) }}>
-            <option value="">All Sources</option>
-            {ALL_SOURCES.map((s) => <option key={s}>{s}</option>)}
-          </select>
-          {(search || filterStatus || filterCity || filterSource) && (
-            <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setPage(1) }}>
-              Clear Filters
-            </Button>
-          )}
-          <span className="ml-auto text-sm text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
+          <div className="flex flex-wrap gap-2">
+            <select className={`${selectCls} flex-1 min-w-[130px]`} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}>
+              <option value="">All Statuses</option>
+              {ALL_STATUSES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <select className={`${selectCls} flex-1 min-w-[110px]`} value={filterCity} onChange={(e) => { setFilterCity(e.target.value); setPage(1) }}>
+              <option value="">All Cities</option>
+              {cities.map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <select className={`${selectCls} flex-1 min-w-[120px]`} value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(1) }}>
+              <option value="">All Sources</option>
+              {ALL_SOURCES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
+            {(search || filterStatus || filterCity || filterSource) && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setPage(1) }}>
+                Clear Filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Table */}
