@@ -25,6 +25,7 @@ export default function LeadsPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterCity, setFilterCity] = useState('')
   const [filterSource, setFilterSource] = useState('')
+  const [filterAssignee, setFilterAssignee] = useState('')
   const [page, setPage] = useState(1)
   const [addOpen, setAddOpen] = useState(false)
   const [editLead, setEditLead] = useState<Lead | null>(null)
@@ -50,6 +51,7 @@ export default function LeadsPage() {
     if (filterStatus && l.status !== filterStatus) return false
     if (filterCity && l.city !== filterCity) return false
     if (filterSource && l.source !== filterSource) return false
+    if (filterAssignee && l.assignedTo !== filterAssignee) return false
     return true
   })
 
@@ -57,6 +59,7 @@ export default function LeadsPage() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const cities = Array.from(new Set(leads.map((l) => l.city))).sort()
+  const assignees = Array.from(new Set(leads.map((l) => l.assignedTo).filter(Boolean))).sort() as string[]
 
   async function handleAddLead(data: Omit<Lead, 'id'>) {
     const lead = await createLead(data)
@@ -129,11 +132,15 @@ export default function LeadsPage() {
               <option value="">All Sources</option>
               {ALL_SOURCES.map((s) => <option key={s}>{s}</option>)}
             </select>
+            <select className={`${selectCls} flex-1 min-w-[120px]`} value={filterAssignee} onChange={(e) => { setFilterAssignee(e.target.value); setPage(1) }}>
+              <option value="">All Employees</option>
+              {assignees.map((a) => <option key={a}>{a}</option>)}
+            </select>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
-            {(search || filterStatus || filterCity || filterSource) && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setPage(1) }}>
+            {(search || filterStatus || filterCity || filterSource || filterAssignee) && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setPage(1) }}>
                 Clear Filters
               </Button>
             )}
