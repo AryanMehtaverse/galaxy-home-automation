@@ -1,249 +1,164 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuthContext } from "@/components/providers/AuthProvider";
-import { useProjects } from "@/hooks/useProjects";
-import { subscribeToAllSiteAssignments, subscribeToMySiteAssignments } from "@/lib/firestore/siteOperations";
-import { fetchLeads } from "@/lib/leadsService";
-import { getAlertsForUser } from "@/lib/utils/alerts";
-import type { SiteAssignment } from "@/types/site";
 
-function StatCard({ label, value, href, color }: { label: string; value: number | string; href?: string; color?: string }) {
-  const content = (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center hover:shadow-md transition-shadow">
-      <p className={`text-3xl font-bold ${color ?? "text-zinc-900 dark:text-zinc-100"}`}>{value}</p>
-      <p className="text-xs text-zinc-500 mt-1">{label}</p>
-    </div>
-  );
-  return href ? <Link href={href}>{content}</Link> : content;
-}
+const TEAM = [
+  { name: "Aryan Mehta", role: "Founder & CEO" },
+  { name: "Manan Shah", role: "Site Operations Lead" },
+  { name: "Rahul Verma", role: "Field Technician" },
+  { name: "Karan Patel", role: "Field Technician" },
+  { name: "Dev Joshi", role: "Project Manager" },
+  { name: "Nikhil Rao", role: "BD Executive" },
+  { name: "Siddharth Kumar", role: "Accounts" },
+  { name: "Rohan Desai", role: "Field Technician" },
+  { name: "Priya Sharma", role: "Business Development" },
+  { name: "Sneha Gupta", role: "Operations Coordinator" },
+];
 
-function SectionHeader({ title, href, linkLabel }: { title: string; href?: string; linkLabel?: string }) {
-  return (
-    <div className="flex items-center justify-between mb-3">
-      <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{title}</h2>
-      {href && <Link href={href} className="text-xs text-amber-600 hover:underline font-medium">{linkLabel ?? "View all"}</Link>}
-    </div>
-  );
-}
-
-// ── Role-specific widgets ─────────────────────────────────────────────────────
-
-function AdminHome() {
-  const { projects, loading: projLoading } = useProjects();
-  const { user } = useAuthContext();
-  const [assignments, setAssignments] = useState<SiteAssignment[]>([]);
-  const [leadCount, setLeadCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    const unsub = subscribeToAllSiteAssignments(setAssignments);
-    fetchLeads().then((l) => setLeadCount(l.length)).catch(() => setLeadCount(null));
-    return unsub;
-  }, []);
-
-  const alerts = getAlertsForUser(projects, user);
-  const needAttention = assignments.filter((a) => a.status === "Need Support" || a.status === "Need Materials");
-  const activeSites = assignments.filter((a) => a.status !== "Completed" && a.status !== "Cancelled");
-
-  return (
-    <div className="space-y-8">
-      {needAttention.length > 0 && (
-        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-4 flex items-start gap-3">
-          <span className="text-red-500 text-xl flex-shrink-0">⚠️</span>
-          <div>
-            <p className="text-sm font-bold text-red-700 dark:text-red-400">{needAttention.length} site{needAttention.length > 1 ? "s" : ""} need attention</p>
-            <p className="text-xs text-red-500 mt-0.5">{needAttention.map((a) => a.projectName).join(", ")}</p>
-            <Link href="/site-operations" className="text-xs text-red-600 font-semibold underline mt-1 inline-block">Go to Site Operations →</Link>
-          </div>
-        </div>
-      )}
-
-      <div>
-        <SectionHeader title="Projects" href="/dashboard" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard label="Total Projects" value={projLoading ? "…" : projects.length} href="/dashboard" />
-          <StatCard label="Active Alerts" value={alerts.length} href="/dashboard/alerts" color={alerts.length > 0 ? "text-red-600" : undefined} />
-          <StatCard label="Active Sites" value={activeSites.length} href="/site-operations" color="text-amber-600 dark:text-amber-400" />
-          <StatCard label="Total Leads" value={leadCount ?? "…"} href="/leads" color="text-blue-600 dark:text-blue-400" />
-        </div>
-      </div>
-
-      <div>
-        <SectionHeader title="Active Sites" href="/site-operations" />
-        {activeSites.length === 0 ? (
-          <p className="text-sm text-zinc-400">No active sites.</p>
-        ) : (
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
-                  {["Project", "Worker", "Status"].map((h) => (
-                    <th key={h} className="text-left px-4 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {activeSites.slice(0, 5).map((a) => (
-                  <tr key={a.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
-                    <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100">
-                      <Link href={`/site-operations/${a.id}`} className="hover:underline">{a.projectName}</Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-zinc-500">{a.assignedToName}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        a.status === "Need Support" || a.status === "Need Materials"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                      }`}>{a.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PMHome() {
-  const { projects, loading: projLoading } = useProjects();
-  const { user } = useAuthContext();
-  const alerts = getAlertsForUser(projects, user);
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <SectionHeader title="Overview" href="/dashboard" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <StatCard label="Total Projects" value={projLoading ? "…" : projects.length} href="/dashboard" />
-          <StatCard label="Active Alerts" value={alerts.length} href="/dashboard/alerts" color={alerts.length > 0 ? "text-red-600" : undefined} />
-          <StatCard label="Quotations" value="View" href="/quotations" />
-        </div>
-      </div>
-      {alerts.length > 0 && (
-        <div>
-          <SectionHeader title="Active Alerts" href="/dashboard/alerts" />
-          <div className="space-y-2">
-            {alerts.slice(0, 5).map((a) => (
-              <div key={a.project.id} className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-4 py-3">
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">{a.project.projectName}</p>
-                <p className="text-xs text-amber-600 mt-0.5">{a.reason}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function BDHome() {
-  const [leadCount, setLeadCount] = useState<number | null>(null);
-  useEffect(() => { fetchLeads().then((l) => setLeadCount(l.length)).catch(() => {}); }, []);
-
-  return (
-    <div className="space-y-6">
-      <SectionHeader title="Leads Pipeline" href="/leads" />
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Total Leads" value={leadCount ?? "…"} href="/leads" color="text-blue-600 dark:text-blue-400" />
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col items-center justify-center gap-2">
-          <Link href="/leads" className="text-sm font-semibold text-amber-600 hover:underline">Open Leads →</Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WorkerHome() {
-  const { user } = useAuthContext();
-  const [mySites, setMySites] = useState<SiteAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const unsub = subscribeToMySiteAssignments(
-      user.uid,
-      (data) => { setMySites(data); setLoading(false); },
-      () => setLoading(false)
-    );
-    return unsub;
-  }, [user]);
-
-  const active = mySites.filter((s) => s.status !== "Completed" && s.status !== "Cancelled");
-
-  return (
-    <div className="space-y-6">
-      <SectionHeader title="My Active Sites" href="/my-sites" />
-      {loading ? (
-        <p className="text-sm text-zinc-400">Loading…</p>
-      ) : active.length === 0 ? (
-        <p className="text-sm text-zinc-400">No active sites assigned to you.</p>
-      ) : (
-        <div className="space-y-3">
-          {active.map((s) => (
-            <Link key={s.id} href={`/my-sites/${s.id}`}
-              className="block rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 hover:shadow-md transition-shadow">
-              <p className="font-semibold text-zinc-900 dark:text-zinc-100">{s.projectName}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">{s.clientName}</p>
-              <span className="mt-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">{s.status}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AccountsHome() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 flex flex-col items-center gap-3 text-center">
-        <p className="text-sm text-zinc-500">Access your quotations and billing documents.</p>
-        <Link href="/quotations" className="rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition-colors">Open Quotations</Link>
-      </div>
-    </div>
-  );
-}
-
-// ── Main page ─────────────────────────────────────────────────────────────────
-
-const ROLE_GREETINGS: Record<string, string> = {
-  admin: "Admin Overview",
-  owner: "Owner Overview",
-  project_manager: "Project Manager Overview",
-  bd_team: "BD Team Overview",
-  site_worker: "Field Worker Overview",
-  accounts: "Accounts Overview",
-  clerk: "Overview",
-  unassigned: "Welcome",
-};
+const VALUES = [
+  {
+    icon: "⚡",
+    title: "Speed & Precision",
+    desc: "We deliver smart home solutions with zero compromise on quality or timelines.",
+  },
+  {
+    icon: "🤝",
+    title: "Client First",
+    desc: "Every decision we make starts with what's best for the homeowner.",
+  },
+  {
+    icon: "🔧",
+    title: "End-to-End Service",
+    desc: "From consultation to installation and beyond — we own the full journey.",
+  },
+  {
+    icon: "🌐",
+    title: "Future-Ready Tech",
+    desc: "We integrate only the best and most forward-compatible automation systems.",
+  },
+];
 
 export default function HomePage() {
   const { user } = useAuthContext();
-  const role = user?.role ?? "unassigned";
-  const greeting = ROLE_GREETINGS[role] ?? "Welcome";
-
-  const renderWidget = () => {
-    if (role === "admin" || role === "owner") return <AdminHome />;
-    if (role === "project_manager" || role === "clerk") return <PMHome />;
-    if (role === "bd_team") return <BDHome />;
-    if (role === "site_worker") return <WorkerHome />;
-    if (role === "accounts") return <AccountsHome />;
-    return <p className="text-sm text-zinc-500">Your account is pending role assignment.</p>;
-  };
+  const firstName = user?.displayName?.split(" ")[0] ?? "there";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{greeting}</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Welcome back, {user?.displayName?.split(" ")[0] ?? "there"} 👋
+    <div className="max-w-5xl mx-auto px-4 py-10 space-y-16">
+
+      {/* Hero */}
+      <section className="text-center space-y-4">
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/Galaxy Logo no bg.jpeg"
+            alt="Galaxy Home Automation"
+            width={72}
+            height={72}
+            className="rounded-xl object-contain"
+            unoptimized
+          />
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight">
+          Galaxy Home Automation
+        </h1>
+        <p className="text-lg text-[#C9A840] font-semibold tracking-wide">Wings of Future</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          We bring intelligent automation to Indian homes — turning ordinary spaces into smart,
+          efficient, and connected living environments.
         </p>
-      </div>
-      {renderWidget()}
+        <p className="text-sm text-zinc-400">
+          Welcome back, <span className="font-semibold text-zinc-700 dark:text-zinc-200">{firstName}</span> 👋
+        </p>
+      </section>
+
+      {/* Team Photo */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 text-center">Meet the Team</h2>
+        <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-700 shadow-lg bg-zinc-100 dark:bg-zinc-800">
+          {/*
+            ── HOW TO ADD YOUR TEAM PHOTO ──────────────────────────────────────
+            1. Save your group photo as:  /public/team-photo.jpg
+            2. Delete the placeholder div below and uncomment the <Image> tag.
+            ──────────────────────────────────────────────────────────────────
+          */}
+
+          {/* Placeholder — remove once you add /public/team-photo.jpg */}
+          <div className="flex flex-col items-center justify-center h-72 sm:h-96 gap-3 text-zinc-400 dark:text-zinc-500">
+            <svg className="h-14 w-14 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p className="text-sm font-medium">Team photo goes here</p>
+            <p className="text-xs">Add your photo at <code className="bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-300">/public/team-photo.jpg</code></p>
+          </div>
+
+          {/* Uncomment once photo is added:
+          <Image
+            src="/team-photo.jpg"
+            alt="Galaxy Home Automation Team"
+            width={1200}
+            height={600}
+            className="w-full object-cover"
+            unoptimized
+          />
+          */}
+
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-6 py-4">
+            <p className="text-white font-bold text-base">The Galaxy Team</p>
+            <p className="text-white/70 text-xs mt-0.5">10 members · Ahmedabad, Gujarat</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="space-y-5">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 text-center">What We Stand For</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {VALUES.map((v) => (
+            <div key={v.title} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex gap-4">
+              <span className="text-2xl flex-shrink-0">{v.icon}</span>
+              <div>
+                <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{v.title}</p>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{v.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Team grid */}
+      <section className="space-y-5">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 text-center">Our People</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {TEAM.map((member) => (
+            <div key={member.name} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 flex flex-col items-center text-center gap-2">
+              <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
+                {member.name.charAt(0)}
+              </div>
+              <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">{member.name}</p>
+              <p className="text-[10px] text-zinc-400 leading-tight">{member.role}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer strip */}
+      <section className="rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <p className="font-bold text-white text-base">Ready to get started?</p>
+          <p className="text-white/80 text-xs mt-0.5">Use the sidebar to navigate to your workspace.</p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/dashboard" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
+            Projects
+          </Link>
+          <Link href="/site-operations" className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+            Site Ops
+          </Link>
+        </div>
+      </section>
+
     </div>
   );
 }
