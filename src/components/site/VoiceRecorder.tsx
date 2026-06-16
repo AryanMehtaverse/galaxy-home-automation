@@ -83,6 +83,19 @@ export function VoiceRecorder({ siteId }: Props) {
     }
   };
 
+  const handleDirectUpload = async () => {
+    if (!audioBlob || !user) return;
+    setState("processing");
+    setError(null);
+    try {
+      await uploadVoiceReport(siteId, audioBlob, user.uid, user.displayName, "", null);
+      setState("saved");
+    } catch {
+      setError("Failed to upload. Please try again.");
+      setState("preview");
+    }
+  };
+
   const handleSave = async () => {
     if (!audioBlob || !user || !editedReport) return;
     setState("processing");
@@ -163,16 +176,22 @@ export function VoiceRecorder({ siteId }: Props) {
       {state === "preview" && audioUrl && (
         <div className="space-y-4">
           <audio controls src={audioUrl} className="w-full" />
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleDirectUpload}
+              className="w-full rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+            >
+              Upload Recording
+            </button>
             <button
               onClick={processRecording}
-              className="flex-1 rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+              className="w-full rounded-lg border border-amber-400 dark:border-amber-600 px-4 py-3 text-sm font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors"
             >
-              Generate AI Report
+              Generate AI Report First
             </button>
             <button
               onClick={deleteRecording}
-              className="rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               Delete
             </button>
