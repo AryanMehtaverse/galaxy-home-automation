@@ -28,7 +28,8 @@ export function subscribeToAllSiteAssignments(
 
 export function subscribeToMySiteAssignments(
   uid: string,
-  callback: (assignments: SiteAssignment[]) => void
+  callback: (assignments: SiteAssignment[]) => void,
+  onError?: (error: Error) => void
 ): Unsubscribe {
   const q = query(
     collection(db, "siteAssignments"),
@@ -44,6 +45,7 @@ export function subscribeToMySiteAssignments(
     callback(data);
   }, (error) => {
     console.error("subscribeToMySiteAssignments error:", error.code, error.message);
+    onError?.(error);
   });
 }
 

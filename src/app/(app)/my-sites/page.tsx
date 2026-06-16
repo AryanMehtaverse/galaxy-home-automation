@@ -32,10 +32,17 @@ function MySitesContent() {
 
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeToMySiteAssignments(user.uid, (data) => {
-      setAssignments(data);
-      setLoading(false);
-    });
+    const unsub = subscribeToMySiteAssignments(
+      user.uid,
+      (data) => {
+        setAssignments(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("My sites error:", error);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, [user]);
 
