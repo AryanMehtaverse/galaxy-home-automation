@@ -48,6 +48,18 @@ service cloud.firestore {
       return isAuthorizedActive() && getRole() == 'site_worker';
     }
 
+    function isSiteManager() {
+      return isAuthorizedActive() && getRole() == 'site_manager';
+    }
+
+    function isFieldTeam() {
+      return isAuthorizedActive() && getRole() == 'field_team';
+    }
+
+    function isSiteRole() {
+      return isSiteManager() || isFieldTeam() || isSiteWorker();
+    }
+
     function isBDTeam() {
       return isAuthorizedActive() && getRole() == 'bd_team';
     }
@@ -66,8 +78,8 @@ service cloud.firestore {
 
     // ── authorized_users ─────────────────────────────────────────────────────
     match /authorized_users/{uid} {
-      // Any authenticated user can read their own doc (needed for login flow)
-      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      // All active users can read the list (home page Our People grid + role dropdowns)
+      allow read: if isAuthorizedActive() || (isAuthenticated() && request.auth.uid == uid);
       // Admins can update any user; users can create their own (auto-registration)
       allow create: if isAuthenticated() && request.auth.uid == uid;
       allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == uid &&
@@ -109,13 +121,16 @@ service cloud.firestore {
     match /siteAssignments/{assignmentId} {
       allow read: if isAuthorizedActive() && (
         isAdminOwnerOrManager() ||
-        (isSiteWorker() && resource.data.assignedTo == request.auth.uid)
+        (isSiteManager() && resource.data.siteManagerId == request.auth.uid) ||
+        ((isFieldTeam() || isSiteWorker()) && resource.data.assignedTo == request.auth.uid)
       );
-      allow create: if isAdminOwnerOrManager();
+      // list queries (onSnapshot with where filter) — site roles can list to filter client-side
+      allow list: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAdminOrOwner();
       allow update: if isAuthorizedActive() && (
         isAdminOwnerOrManager() ||
-        (isSiteWorker() && resource.data.assignedTo == request.auth.uid &&
-          // Site workers can only update status and updatedAt
+        (isSiteManager() && resource.data.siteManagerId == request.auth.uid) ||
+        ((isFieldTeam() || isSiteWorker()) && resource.data.assignedTo == request.auth.uid &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
       );
       allow delete: if isAdminOrOwner();
@@ -123,31 +138,29 @@ service cloud.firestore {
 
     // ── siteTimeline ─────────────────────────────────────────────────────────
     match /siteTimeline/{entryId} {
-      allow read: if isAuthorizedActive() && (
-        isAdminOwnerOrManager() || isSiteWorker()
-      );
-      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
       allow update, delete: if isAdminOrOwner();
     }
 
     // ── sitePhotos ───────────────────────────────────────────────────────────
     match /sitePhotos/{photoId} {
-      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
-      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
       allow update, delete: if isAdminOwnerOrManager();
     }
 
     // ── siteReports ──────────────────────────────────────────────────────────
     match /siteReports/{reportId} {
-      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
-      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
       allow update, delete: if isAdminOwnerOrManager();
     }
 
     // ── voiceReports ─────────────────────────────────────────────────────────
     match /voiceReports/{reportId} {
-      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
-      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteWorker());
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
       allow update, delete: if isAdminOwnerOrManager();
     }
   }
