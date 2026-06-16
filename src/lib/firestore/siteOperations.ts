@@ -32,11 +32,18 @@ export function subscribeToMySiteAssignments(
 ): Unsubscribe {
   const q = query(
     collection(db, "siteAssignments"),
-    where("assignedTo", "==", uid),
-    orderBy("createdAt", "desc")
+    where("assignedTo", "==", uid)
   );
   return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as SiteAssignment)));
+    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SiteAssignment));
+    data.sort((a, b) => {
+      const aTime = a.createdAt ? (a.createdAt as unknown as { toDate: () => Date }).toDate().getTime() : 0;
+      const bTime = b.createdAt ? (b.createdAt as unknown as { toDate: () => Date }).toDate().getTime() : 0;
+      return bTime - aTime;
+    });
+    callback(data);
+  }, (error) => {
+    console.error("subscribeToMySiteAssignments error:", error.code, error.message);
   });
 }
 
