@@ -98,7 +98,6 @@ function SiteDetailContent() {
   const TABS: { id: Tab; label: string }[] = [
     { id: "instructions", label: "Instructions" },
     { id: "photos", label: "Photos" },
-    { id: "reports", label: "Reports" },
     { id: "voice", label: "Voice" },
     { id: "timeline", label: "Timeline" },
   ];
@@ -229,7 +228,6 @@ function SiteDetailContent() {
           </div>
         )}
         {tab === "photos" && <PhotoUpload siteId={siteId} />}
-        {tab === "reports" && <WrittenReport siteId={siteId} />}
         {tab === "voice" && <VoiceRecorder siteId={siteId} />}
         {tab === "timeline" && <SiteTimeline siteId={siteId} />}
       </div>
@@ -237,8 +235,8 @@ function SiteDetailContent() {
       {/* Quick action bar for site workers */}
       {isSiteWorker && (
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex gap-2 lg:relative lg:bg-transparent lg:border-0 lg:px-0 lg:py-0">
-          {(["photos", "voice", "reports"] as const).map((t) => {
-            const labels = { photos: "📷 Photo", voice: "🎙️ Voice", reports: "📝 Report" };
+          {(["photos", "voice"] as const).map((t) => {
+            const labels = { photos: "📷 Photo", voice: "🎙️ Voice" };
             return (
               <button
                 key={t}
