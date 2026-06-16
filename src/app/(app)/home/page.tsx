@@ -1,24 +1,43 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useAuthContext } from "@/components/providers/AuthProvider";
+import { subscribeToUsers, type ManagedUser } from "@/lib/firestore/users";
+import type { AppRole } from "@/types/auth";
 
-const TEAM = [
-  { name: "Aryan Mehta", role: "Founder & CEO" },
-  { name: "Manan Shah", role: "Site Operations Lead" },
-  { name: "Rahul Verma", role: "Field Technician" },
-  { name: "Karan Patel", role: "Field Technician" },
-  { name: "Dev Joshi", role: "Project Manager" },
-  { name: "Nikhil Rao", role: "BD Executive" },
-  { name: "Siddharth Kumar", role: "Accounts" },
-  { name: "Rohan Desai", role: "Field Technician" },
-  { name: "Priya Sharma", role: "Business Development" },
-  { name: "Sneha Gupta", role: "Operations Coordinator" },
-];
+const ROLE_EMOJI: Record<AppRole, string> = {
+  admin: "👑",
+  owner: "🏆",
+  project_manager: "📋",
+  bd_team: "🤝",
+  site_worker: "🔧",
+  accounts: "💼",
+  clerk: "📝",
+  unassigned: "👤",
+};
+
+const ROLE_LABEL: Record<AppRole, string> = {
+  admin: "Admin",
+  owner: "Owner",
+  project_manager: "Project Manager",
+  bd_team: "BD Team",
+  site_worker: "Field Technician",
+  accounts: "Accounts",
+  clerk: "Clerk",
+  unassigned: "Unassigned",
+};
 
 export default function HomePage() {
   const { user } = useAuthContext();
   const firstName = user?.displayName?.split(" ")[0] ?? "there";
+  const [team, setTeam] = useState<ManagedUser[]>([]);
+
+  useEffect(() => {
+    return subscribeToUsers((users) => {
+      setTeam(users.filter((u) => u.active && u.role !== "unassigned"));
+    });
+  }, []);
 
   return (
     <div className="min-h-full bg-white dark:bg-zinc-950">
@@ -87,16 +106,19 @@ export default function HomePage() {
             <h2 className="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">Meet the Team</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {TEAM.map((member) => (
-              <div key={member.name}
+            {team.map((member) => (
+              <div key={member.uid}
                 className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition-shadow">
-                <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
-                  {member.name.charAt(0)}
+                <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-xl">
+                  {ROLE_EMOJI[member.role]}
                 </div>
                 <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">{member.name}</p>
-                <p className="text-[10px] text-zinc-400 leading-tight">{member.role}</p>
+                <p className="text-[10px] text-zinc-400 leading-tight">{ROLE_LABEL[member.role]}</p>
               </div>
             ))}
+            {team.length === 0 && (
+              <p className="col-span-full text-center text-sm text-zinc-400 py-4">Loading team…</p>
+            )}
           </div>
         </section>
 
