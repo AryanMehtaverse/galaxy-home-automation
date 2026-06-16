@@ -56,7 +56,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const items: NavItem[] = [
     {
       href: "/dashboard",
-      label: "Dashboard",
+      label: "Projects",
       visible: canAccessDashboard(user),
       icon: <DashIcon />,
     },
