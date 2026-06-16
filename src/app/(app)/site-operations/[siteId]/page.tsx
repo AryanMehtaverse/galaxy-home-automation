@@ -9,6 +9,7 @@ import { useAuthContext } from "@/components/providers/AuthProvider";
 import { SiteTimeline } from "@/components/site/SiteTimeline";
 import { PhotoUpload } from "@/components/site/PhotoUpload";
 import { WrittenReport } from "@/components/site/WrittenReport";
+import { VoiceReportViewer } from "@/components/site/VoiceReportViewer";
 import type { SiteAssignment, SiteStatus } from "@/types/site";
 
 const STATUSES: SiteStatus[] = ["Assigned", "In Progress", "Partially Completed", "Completed", "Need Support", "Need Materials", "Cancelled"];
@@ -30,7 +31,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   Urgent: "text-red-500 font-bold",
 };
 
-type Tab = "overview" | "photos" | "reports" | "timeline";
+type Tab = "overview" | "photos" | "reports" | "voice" | "timeline";
 
 function AdminSiteDetailContent() {
   const { siteId } = useParams<{ siteId: string }>();
@@ -64,6 +65,7 @@ function AdminSiteDetailContent() {
     { id: "overview", label: "Overview" },
     { id: "photos", label: "Photos" },
     { id: "reports", label: "Reports" },
+    { id: "voice", label: "Voice Reports" },
     { id: "timeline", label: "Timeline" },
   ];
 
@@ -180,6 +182,7 @@ function AdminSiteDetailContent() {
         )}
         {tab === "photos" && <PhotoUpload siteId={siteId} />}
         {tab === "reports" && <WrittenReport siteId={siteId} />}
+        {tab === "voice" && <VoiceReportViewer siteId={siteId} />}
         {tab === "timeline" && <SiteTimeline siteId={siteId} />}
       </div>
     </div>
