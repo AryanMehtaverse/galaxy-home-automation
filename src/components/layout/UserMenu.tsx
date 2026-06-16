@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import { Button } from "@/components/ui/Button";
 
 interface UserMenuProps {
@@ -64,6 +65,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
         <>
           <div className="mb-3 flex items-center justify-between">
             <ThemeToggle />
+            <NotificationBell />
           </div>
           <div className="mb-3 flex items-center gap-3">
             {user.photoURL ? (

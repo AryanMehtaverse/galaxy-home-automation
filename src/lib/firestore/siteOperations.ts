@@ -78,12 +78,22 @@ export async function createSiteAssignment(
 
 export async function updateSiteAssignment(
   id: string,
-  data: Partial<Omit<SiteAssignment, "id" | "createdAt">>
+  data: Partial<Omit<SiteAssignment, "id" | "createdAt">>,
+  userId?: string,
+  userName?: string
 ): Promise<void> {
   await updateDoc(doc(db, "siteAssignments", id), {
     ...data,
     updatedAt: serverTimestamp(),
   });
+  if (userId && userName) {
+    await addTimelineEntry(id, {
+      action: "Assignment Updated",
+      description: "Assignment details updated",
+      userId,
+      userName,
+    });
+  }
 }
 
 export async function updateSiteStatus(
