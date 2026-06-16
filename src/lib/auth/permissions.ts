@@ -16,7 +16,7 @@ export function canAccessDashboard(user: AppUser | null | undefined): boolean {
 }
 
 export function canAccessAlerts(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "owner", "clerk"]);
+  return hasRole(user, ["admin", "project_manager", "owner", "clerk"]);
 }
 
 export function canAccessInventory(user: AppUser | null | undefined): boolean {
