@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import {
   subscribeToAllSiteAssignments,
@@ -183,6 +184,7 @@ export default function SiteOperationsPage() {
 
 function SiteOperationsContent() {
   const { user } = useAuthContext();
+  const router = useRouter();
   const [assignments, setAssignments] = useState<SiteAssignment[]>([]);
   const [workers, setWorkers] = useState<{ uid: string; name: string }[]>([]);
   const [showCreate, setShowCreate] = useState(false);
@@ -298,7 +300,11 @@ function SiteOperationsContent() {
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filtered.map((a) => (
-              <tr key={a.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+              <tr
+                key={a.id}
+                onClick={() => router.push(`/site-operations/${a.id}`)}
+                className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer"
+              >
                 <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{a.projectName}</td>
                 <td className="px-4 py-3 text-zinc-500">{a.clientName}</td>
                 <td className="px-4 py-3 text-zinc-500">{a.assignedToName}</td>
@@ -319,7 +325,11 @@ function SiteOperationsContent() {
       {/* Cards — mobile */}
       <div className="md:hidden space-y-3">
         {filtered.map((a) => (
-          <div key={a.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2">
+          <div
+            key={a.id}
+            onClick={() => router.push(`/site-operations/${a.id}`)}
+            className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2 cursor-pointer active:opacity-70"
+          >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold text-zinc-900 dark:text-zinc-100">{a.projectName}</p>
