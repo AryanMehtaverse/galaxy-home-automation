@@ -57,8 +57,10 @@ export function VoiceRecorder({ siteId }: Props) {
     try {
       await uploadVoiceReport(siteId, audioBlob, user.uid, user.displayName, "", null);
       setState("done");
-    } catch {
-      setError("Upload failed. Please try again.");
+    } catch (err: unknown) {
+      console.error("Voice upload error:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Upload failed: ${msg}`);
       setState("preview");
     }
   };
