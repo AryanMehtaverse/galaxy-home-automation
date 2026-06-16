@@ -40,15 +40,19 @@ export function canAccessSiteOperations(user: AppUser | null | undefined): boole
 }
 
 export function canAccessMySites(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["site_worker"]);
+  return hasRole(user, ["site_manager", "field_team", "site_worker"]);
 }
 
 export function canManageSiteAssignments(user: AppUser | null | undefined): boolean {
   return hasRole(user, ["admin", "owner"]);
 }
 
+export function canAssignFieldTeam(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["site_manager", "admin", "owner"]);
+}
+
 export function canUpdateSiteStatus(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "site_worker", "owner"]);
+  return hasRole(user, ["admin", "field_team", "site_worker", "owner", "site_manager"]);
 }
 
 export function canCreateProject(user: AppUser | null | undefined): boolean {

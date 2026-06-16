@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { UserMenu } from "./UserMenu";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { canViewActivityLogs, canAccessRecycleBin, canManageUsers, canAccessSiteOperations, canAccessMySites, canAccessLeads, canAccessQuotations, canAccessInventory, canAccessNewProject, canAccessDashboard, canAccessAlerts } from "@/lib/auth/permissions";
+
 import { useProjects } from "@/hooks/useProjects";
 import { getAlertsForUser } from "@/lib/utils/alerts";
 

@@ -23,7 +23,7 @@ export function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role === "admin" || user?.role === "owner";
-  const isManager = user?.role === "project_manager";
+  const isManager = user?.role === "project_manager" || user?.role === "site_manager";
 
   useEffect(() => {
     if (!isAdmin && !isManager) return;

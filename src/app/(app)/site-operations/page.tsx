@@ -8,7 +8,7 @@ import {
   createSiteAssignment,
   updateSiteAssignment,
   updateSiteStatus,
-  getSiteWorkers,
+  getSiteManagers,
 } from "@/lib/firestore/siteOperations";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import type { SiteAssignment, SiteStatus, SitePriority } from "@/types/site";
@@ -39,15 +39,15 @@ const EMPTY_FORM = {
   address: "",
   siteDate: "",
   priority: "Medium" as SitePriority,
-  assignedTo: "",
-  assignedToName: "",
+  siteManagerId: "",
+  siteManagerName: "",
   workDescription: "",
   notes: "",
 };
 
-function CreateModal({ onClose, workers, onCreated }: {
+function CreateModal({ onClose, managers, onCreated }: {
   onClose: () => void;
-  workers: { uid: string; name: string }[];
+  managers: { uid: string; name: string }[];
   onCreated: () => void;
 }) {
   const { user } = useAuthContext();
@@ -55,16 +55,16 @@ function CreateModal({ onClose, workers, onCreated }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleWorkerChange = (uid: string) => {
-    const worker = workers.find((w) => w.uid === uid);
-    setForm((f) => ({ ...f, assignedTo: uid, assignedToName: worker?.name ?? "" }));
+  const handleManagerChange = (uid: string) => {
+    const mgr = managers.find((m) => m.uid === uid);
+    setForm((f) => ({ ...f, siteManagerId: uid, siteManagerName: mgr?.name ?? "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!form.projectName || !form.clientName || !form.assignedTo) {
-      setError("Project name, client name and assignee are required.");
+    if (!form.projectName || !form.clientName || !form.siteManagerId) {
+      setError("Project name, client name and site manager are required.");
       return;
     }
     setSaving(true);
@@ -72,6 +72,8 @@ function CreateModal({ onClose, workers, onCreated }: {
     try {
       await createSiteAssignment({
         ...form,
+        assignedTo: "",
+        assignedToName: "",
         assignedBy: user.uid,
         assignedByName: user.displayName,
         status: "Assigned",
@@ -128,15 +130,15 @@ function CreateModal({ onClose, workers, onCreated }: {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Assign To</label>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Site Manager</label>
               <select
-                value={form.assignedTo}
-                onChange={(e) => handleWorkerChange(e.target.value)}
+                value={form.siteManagerId}
+                onChange={(e) => handleManagerChange(e.target.value)}
                 required
                 className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="">Select worker…</option>
-                {workers.map((w) => <option key={w.uid} value={w.uid}>{w.name}</option>)}
+                <option value="">Select manager…</option>
+                {managers.map((m) => <option key={m.uid} value={m.uid}>{m.name}</option>)}
               </select>
             </div>
           </div>
@@ -175,10 +177,10 @@ function CreateModal({ onClose, workers, onCreated }: {
   );
 }
 
-function EditModal({ assignment, onClose, workers }: {
+function EditModal({ assignment, onClose, managers }: {
   assignment: SiteAssignment;
   onClose: () => void;
-  workers: { uid: string; name: string }[];
+  managers: { uid: string; name: string }[];
 }) {
   const { user } = useAuthContext();
   const [form, setForm] = useState({
@@ -187,17 +189,17 @@ function EditModal({ assignment, onClose, workers }: {
     address: assignment.address ?? "",
     siteDate: assignment.siteDate ?? "",
     priority: assignment.priority,
-    assignedTo: assignment.assignedTo,
-    assignedToName: assignment.assignedToName,
+    siteManagerId: assignment.siteManagerId ?? "",
+    siteManagerName: assignment.siteManagerName ?? "",
     workDescription: assignment.workDescription ?? "",
     notes: assignment.notes ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleWorkerChange = (uid: string) => {
-    const worker = workers.find((w) => w.uid === uid);
-    setForm((f) => ({ ...f, assignedTo: uid, assignedToName: worker?.name ?? "" }));
+  const handleManagerChange = (uid: string) => {
+    const mgr = managers.find((m) => m.uid === uid);
+    setForm((f) => ({ ...f, siteManagerId: uid, siteManagerName: mgr?.name ?? "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,13 +258,13 @@ function EditModal({ assignment, onClose, workers }: {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Reassign To</label>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Reassign Manager</label>
               <select
-                value={form.assignedTo}
-                onChange={(e) => handleWorkerChange(e.target.value)}
+                value={form.siteManagerId}
+                onChange={(e) => handleManagerChange(e.target.value)}
                 className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                {workers.map((w) => <option key={w.uid} value={w.uid}>{w.name}</option>)}
+                {managers.map((m) => <option key={m.uid} value={m.uid}>{m.name}</option>)}
               </select>
             </div>
           </div>
@@ -300,7 +302,7 @@ function EditModal({ assignment, onClose, workers }: {
 
 export default function SiteOperationsPage() {
   return (
-    <RoleGuard allowedRoles={["admin", "project_manager", "owner"]} redirectTo="/dashboard">
+    <RoleGuard allowedRoles={["admin", "owner"]} redirectTo="/dashboard">
       <SiteOperationsContent />
     </RoleGuard>
   );
@@ -310,7 +312,7 @@ function SiteOperationsContent() {
   const { user } = useAuthContext();
   const router = useRouter();
   const [assignments, setAssignments] = useState<SiteAssignment[]>([]);
-  const [workers, setWorkers] = useState<{ uid: string; name: string }[]>([]);
+  const [managers, setManagers] = useState<{ uid: string; name: string }[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<SiteAssignment | null>(null);
   const [search, setSearch] = useState("");
@@ -319,7 +321,7 @@ function SiteOperationsContent() {
 
   useEffect(() => {
     const unsub = subscribeToAllSiteAssignments(setAssignments);
-    getSiteWorkers().then(setWorkers);
+    getSiteManagers().then(setManagers);
     return unsub;
   }, []);
 
@@ -334,7 +336,7 @@ function SiteOperationsContent() {
   const filtered = assignments.filter((a) => {
     const matchSearch = !search || a.projectName.toLowerCase().includes(search.toLowerCase()) || a.clientName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || a.status === filterStatus;
-    const matchWorker = filterWorker === "all" || a.assignedTo === filterWorker;
+    const matchWorker = filterWorker === "all" || a.siteManagerId === filterWorker;
     return matchSearch && matchStatus && matchWorker;
   });
 
@@ -349,7 +351,7 @@ function SiteOperationsContent() {
       {showCreate && (
         <CreateModal
           onClose={() => setShowCreate(false)}
-          workers={workers}
+          managers={managers}
           onCreated={() => {}}
         />
       )}
@@ -357,7 +359,7 @@ function SiteOperationsContent() {
         <EditModal
           assignment={editingAssignment}
           onClose={() => setEditingAssignment(null)}
-          workers={workers}
+          managers={managers}
         />
       )}
 
@@ -415,8 +417,8 @@ function SiteOperationsContent() {
           onChange={(e) => setFilterWorker(e.target.value)}
           className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
-          <option value="all">All Technicians</option>
-          {workers.map((w) => <option key={w.uid} value={w.uid}>{w.name}</option>)}
+          <option value="all">All Site Managers</option>
+          {managers.map((m) => <option key={m.uid} value={m.uid}>{m.name}</option>)}
         </select>
       </div>
 
@@ -425,7 +427,7 @@ function SiteOperationsContent() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
-              {["Project", "Client", "Assigned To", "Priority", "Status", "Last Update", ""].map((h) => (
+              {["Project", "Client", "Site Manager", "Field Team", "Priority", "Status", "Last Update", ""].map((h) => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -446,7 +448,8 @@ function SiteOperationsContent() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-zinc-500">{a.clientName}</td>
-                  <td className="px-4 py-3 text-zinc-500">{a.assignedToName}</td>
+                  <td className="px-4 py-3 text-zinc-500">{a.siteManagerName || "—"}</td>
+                  <td className="px-4 py-3 text-zinc-500">{a.assignedToName || <span className="text-zinc-300 dark:text-zinc-600 italic text-xs">Not assigned</span>}</td>
                   <td className={`px-4 py-3 text-xs font-semibold ${PRIORITY_COLORS[a.priority]}`}>{a.priority}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[a.status]}`}>{a.status}</span>

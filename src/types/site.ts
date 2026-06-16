@@ -18,10 +18,15 @@ export interface SiteAssignment {
   address: string;
   siteDate: string;
   priority: SitePriority;
-  assignedTo: string;
-  assignedToName: string;
+  // who created (owner/admin)
   assignedBy: string;
   assignedByName: string;
+  // site manager responsible for this site
+  siteManagerId: string;
+  siteManagerName: string;
+  // field team member assigned by site manager
+  assignedTo: string;
+  assignedToName: string;
   workDescription: string;
   notes: string;
   status: SiteStatus;

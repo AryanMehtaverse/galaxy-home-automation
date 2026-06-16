@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   type Unsubscribe,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import type { SiteAssignment, SitePhoto, SiteTimelineEntry, SiteReport, VoiceReport, SiteStatus, GeneratedReport } from "@/types/site";
 
@@ -53,6 +53,49 @@ export function subscribeToMySiteAssignments(
   }, (error) => {
     console.error("subscribeToMySiteAssignments error:", error.code, error.message);
     onError?.(error);
+  });
+}
+
+export function subscribeToSiteManagerAssignments(
+  uid: string,
+  callback: (assignments: SiteAssignment[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const q = query(
+    collection(db, "siteAssignments"),
+    where("siteManagerId", "==", uid)
+  );
+  return onSnapshot(q, (snap) => {
+    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SiteAssignment));
+    data.sort((a, b) => {
+      const aTime = a.createdAt ? (a.createdAt as unknown as { toDate: () => Date }).toDate().getTime() : 0;
+      const bTime = b.createdAt ? (b.createdAt as unknown as { toDate: () => Date }).toDate().getTime() : 0;
+      return bTime - aTime;
+    });
+    callback(data);
+  }, (error) => {
+    console.error("subscribeToSiteManagerAssignments error:", error.code, error.message);
+    onError?.(error);
+  });
+}
+
+export async function assignFieldTeamMember(
+  siteId: string,
+  fieldTeamUid: string,
+  fieldTeamName: string,
+  managerId: string,
+  managerName: string
+): Promise<void> {
+  await updateDoc(doc(db, "siteAssignments", siteId), {
+    assignedTo: fieldTeamUid,
+    assignedToName: fieldTeamName,
+    updatedAt: serverTimestamp(),
+  });
+  await addTimelineEntry(siteId, {
+    action: "Field Team Assigned",
+    description: `${fieldTeamName} assigned to this site by ${managerName}`,
+    userId: managerId,
+    userName: managerName,
   });
 }
 
@@ -144,6 +187,20 @@ export function subscribeToSiteTimeline(
 
 // ── Photos ──────────────────────────────────────────────────────────────────
 
+function uploadWithTimeout(storageRef: ReturnType<typeof ref>, data: File | Blob, timeoutMs = 30000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(storageRef, data);
+    const timer = setTimeout(() => {
+      task.cancel();
+      reject(new Error("Upload timed out. Check Firebase Storage rules and that Storage is enabled in your Firebase project."));
+    }, timeoutMs);
+    task.on("state_changed", null,
+      (err) => { clearTimeout(timer); reject(err); },
+      () => { clearTimeout(timer); resolve(); }
+    );
+  });
+}
+
 export async function uploadSitePhoto(
   siteId: string,
   file: File,
@@ -153,7 +210,7 @@ export async function uploadSitePhoto(
 ): Promise<string> {
   const ext = file.name.split(".").pop() ?? "jpg";
   const storageRef = ref(storage, `site-photos/${siteId}/${Date.now()}.${ext}`);
-  await uploadBytes(storageRef, file);
+  await uploadWithTimeout(storageRef, file);
   const url = await getDownloadURL(storageRef);
 
   await addDoc(collection(db, "sitePhotos"), {
@@ -244,7 +301,7 @@ export async function uploadVoiceReport(
   generatedReport: GeneratedReport | null
 ): Promise<string> {
   const storageRef = ref(storage, `voice-reports/${siteId}/${Date.now()}.webm`);
-  await uploadBytes(storageRef, audioBlob);
+  await uploadWithTimeout(storageRef, audioBlob);
   const audioUrl = await getDownloadURL(storageRef);
 
   const docRef = await addDoc(collection(db, "voiceReports"), {
@@ -284,10 +341,32 @@ export function subscribeToVoiceReports(
 // ── Workers list ─────────────────────────────────────────────────────────────
 
 export async function getSiteWorkers(): Promise<{ uid: string; name: string }[]> {
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query(collection(db, "authorized_users"), where("role", "==", "site_worker"))),
+    getDocs(query(collection(db, "authorized_users"), where("role", "==", "field_team"))),
+  ]);
+  return [...snap1.docs, ...snap2.docs].map((d) => {
+    const data = d.data();
+    return { uid: d.id, name: data.name || data.displayName || data.email || d.id };
+  });
+}
+
+export async function getSiteManagers(): Promise<{ uid: string; name: string }[]> {
   const snap = await getDocs(
-    query(collection(db, "authorized_users"), where("role", "==", "site_worker"))
+    query(collection(db, "authorized_users"), where("role", "==", "site_manager"))
   );
   return snap.docs.map((d) => {
+    const data = d.data();
+    return { uid: d.id, name: data.name || data.displayName || data.email || d.id };
+  });
+}
+
+export async function getFieldTeamMembers(): Promise<{ uid: string; name: string }[]> {
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query(collection(db, "authorized_users"), where("role", "==", "field_team"))),
+    getDocs(query(collection(db, "authorized_users"), where("role", "==", "site_worker"))),
+  ]);
+  return [...snap1.docs, ...snap2.docs].map((d) => {
     const data = d.data();
     return { uid: d.id, name: data.name || data.displayName || data.email || d.id };
   });

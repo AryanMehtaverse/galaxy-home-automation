@@ -2,9 +2,11 @@ export type AppRole =
   | "admin"
   | "owner"
   | "clerk"
-  | "site_worker"
+  | "site_worker"       // legacy
   | "bd_team"
   | "project_manager"
+  | "site_manager"      // new
+  | "field_team"        // new
   | "accounts"
   | "unassigned";
 

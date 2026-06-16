@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import { subscribeToMySiteAssignments } from "@/lib/firestore/siteOperations";
+import {
+  subscribeToMySiteAssignments,
+  subscribeToSiteManagerAssignments,
+} from "@/lib/firestore/siteOperations";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import type { SiteAssignment, SiteStatus } from "@/types/site";
 
@@ -17,120 +20,117 @@ const STATUS_COLORS: Record<SiteStatus, string> = {
   "Cancelled": "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
 };
 
-export default function MySitesPage() {
+function SiteCard({ site, isSiteManager }: { site: SiteAssignment; isSiteManager: boolean }) {
+  const needsAttention = site.status === "Need Support" || site.status === "Need Materials";
   return (
-    <RoleGuard allowedRoles={["site_worker"]} redirectTo="/dashboard">
-      <MySitesContent />
-    </RoleGuard>
+    <Link
+      href={`/my-sites/${site.id}`}
+      className={`block rounded-2xl border p-4 space-y-3 transition-all hover:shadow-md active:opacity-80 ${
+        needsAttention
+          ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20"
+          : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+            {needsAttention && <span className="text-red-500 text-sm">⚠️</span>}
+            {site.projectName}
+          </p>
+          <p className="text-sm text-zinc-500 mt-0.5">{site.clientName}</p>
+          {site.address && <p className="text-xs text-zinc-400 mt-0.5">📍 {site.address}</p>}
+        </div>
+        <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[site.status]}`}>
+          {site.status}
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-xs text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+        {isSiteManager ? (
+          <span>👷 {site.assignedToName || <span className="italic">No field team assigned</span>}</span>
+        ) : (
+          <span>🏗️ Managed by {site.siteManagerName || "—"}</span>
+        )}
+        <span className={`font-semibold ${site.priority === "Urgent" ? "text-red-500" : site.priority === "High" ? "text-orange-500" : ""}`}>
+          {site.priority}
+        </span>
+      </div>
+    </Link>
   );
 }
 
 function MySitesContent() {
   const { user } = useAuthContext();
-  const [assignments, setAssignments] = useState<SiteAssignment[]>([]);
+  const [sites, setSites] = useState<SiteAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isSiteManager = user?.role === "site_manager";
 
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeToMySiteAssignments(
-      user.uid,
-      (data) => {
-        setAssignments(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("My sites error:", error);
-        setLoading(false);
-      }
-    );
-    return unsub;
-  }, [user]);
+    setLoading(true);
 
-  const active = assignments.filter((a) => a.status !== "Completed" && a.status !== "Cancelled");
-  const done = assignments.filter((a) => a.status === "Completed" || a.status === "Cancelled");
+    const sub = isSiteManager
+      ? subscribeToSiteManagerAssignments(
+          user.uid,
+          (data) => { setSites(data); setLoading(false); },
+          () => setLoading(false)
+        )
+      : subscribeToMySiteAssignments(
+          user.uid,
+          (data) => { setSites(data); setLoading(false); },
+          () => setLoading(false)
+        );
 
-  const formatDate = (ts: SiteAssignment["createdAt"]) => {
-    if (!ts) return "—";
-    const d = (ts as unknown as { toDate: () => Date }).toDate();
-    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  };
+    return sub;
+  }, [user, isSiteManager]);
 
-  const SiteCard = ({ a }: { a: SiteAssignment }) => (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{a.projectName}</p>
-          <p className="text-sm text-zinc-500">{a.clientName}</p>
-        </div>
-        <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[a.status]}`}>
-          {a.status}
-        </span>
-      </div>
-      {a.address && (
-        <p className="text-xs text-zinc-400 flex items-center gap-1">
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          {a.address}
-        </p>
-      )}
-      <p className="text-xs text-zinc-400">Assigned: {formatDate(a.createdAt)}</p>
-      <div className="flex gap-2 pt-1">
-        <Link
-          href={`/my-sites/${a.id}`}
-          className="flex-1 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white text-center hover:bg-amber-600 transition-colors"
-        >
-          Open Site
-        </Link>
-        {a.status === "Assigned" && (
-          <Link
-            href={`/my-sites/${a.id}?action=start`}
-            className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 text-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            Start Visit
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-      </div>
-    );
-  }
+  const active = sites.filter((s) => s.status !== "Completed" && s.status !== "Cancelled");
+  const completed = sites.filter((s) => s.status === "Completed" || s.status === "Cancelled");
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">My Sites</h1>
-        <p className="text-sm text-zinc-500 mt-1">{active.length} active · {done.length} completed</p>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          {isSiteManager ? "Sites Under My Management" : "My Sites"}
+        </h1>
+        <p className="text-sm text-zinc-500 mt-1">
+          {isSiteManager ? "Sites assigned to you by the owner" : "Sites assigned to you by your site manager"}
+        </p>
       </div>
 
-      {assignments.length === 0 && (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-          <div className="text-4xl mb-3">🏗️</div>
-          <p className="font-semibold text-zinc-700 dark:text-zinc-300">No sites assigned</p>
-          <p className="text-sm text-zinc-400 mt-1">Your assignments will appear here.</p>
+      {loading ? (
+        <div className="flex justify-center py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
         </div>
-      )}
-
-      {active.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Active ({active.length})</h2>
-          {active.map((a) => <SiteCard key={a.id} a={a} />)}
+      ) : sites.length === 0 ? (
+        <div className="text-center py-16 space-y-2">
+          <p className="text-4xl">🏗️</p>
+          <p className="text-sm text-zinc-500">No sites assigned yet.</p>
         </div>
-      )}
-
-      {done.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Completed / Cancelled ({done.length})</h2>
-          {done.map((a) => <SiteCard key={a.id} a={a} />)}
-        </div>
+      ) : (
+        <>
+          {active.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Active · {active.length}</p>
+              {active.map((s) => <SiteCard key={s.id} site={s} isSiteManager={isSiteManager} />)}
+            </div>
+          )}
+          {completed.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Completed · {completed.length}</p>
+              {completed.map((s) => <SiteCard key={s.id} site={s} isSiteManager={isSiteManager} />)}
+            </div>
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+export default function MySitesPage() {
+  return (
+    <RoleGuard allowedRoles={["site_manager", "field_team", "site_worker"]} redirectTo="/home">
+      <MySitesContent />
+    </RoleGuard>
   );
 }
