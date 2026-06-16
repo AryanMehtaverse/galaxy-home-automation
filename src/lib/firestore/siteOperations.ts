@@ -11,8 +11,23 @@ import {
   serverTimestamp,
   type Unsubscribe,
 } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
+
+const CLOUDINARY_CLOUD = "dhde1tjbl";
+const CLOUDINARY_PRESET = "galaxy_uploads";
+
+async function uploadToCloudinary(file: File | Blob, resourceType: "image" | "video" = "image"): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.statusText}`);
+  const data = await res.json();
+  return data.secure_url as string;
+}
 import type { SiteAssignment, SitePhoto, SiteTimelineEntry, SiteReport, VoiceReport, SiteStatus, GeneratedReport } from "@/types/site";
 
 // ── Site Assignments ────────────────────────────────────────────────────────
@@ -187,20 +202,6 @@ export function subscribeToSiteTimeline(
 
 // ── Photos ──────────────────────────────────────────────────────────────────
 
-function uploadWithTimeout(storageRef: ReturnType<typeof ref>, data: File | Blob, timeoutMs = 30000): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const task = uploadBytesResumable(storageRef, data);
-    const timer = setTimeout(() => {
-      task.cancel();
-      reject(new Error("Upload timed out. Check Firebase Storage rules and that Storage is enabled in your Firebase project."));
-    }, timeoutMs);
-    task.on("state_changed", null,
-      (err) => { clearTimeout(timer); reject(err); },
-      () => { clearTimeout(timer); resolve(); }
-    );
-  });
-}
-
 export async function uploadSitePhoto(
   siteId: string,
   file: File,
@@ -208,10 +209,7 @@ export async function uploadSitePhoto(
   userId: string,
   userName: string
 ): Promise<string> {
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const storageRef = ref(storage, `site-photos/${siteId}/${Date.now()}.${ext}`);
-  await uploadWithTimeout(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+  const url = await uploadToCloudinary(file, "image");
 
   await addDoc(collection(db, "sitePhotos"), {
     siteId,
@@ -300,9 +298,7 @@ export async function uploadVoiceReport(
   transcript: string,
   generatedReport: GeneratedReport | null
 ): Promise<string> {
-  const storageRef = ref(storage, `voice-reports/${siteId}/${Date.now()}.webm`);
-  await uploadWithTimeout(storageRef, audioBlob);
-  const audioUrl = await getDownloadURL(storageRef);
+  const audioUrl = await uploadToCloudinary(audioBlob, "video");
 
   const docRef = await addDoc(collection(db, "voiceReports"), {
     siteId,
