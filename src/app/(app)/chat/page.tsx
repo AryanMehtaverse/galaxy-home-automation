@@ -229,11 +229,15 @@ export default function ChatPage() {
                 {msg.role === "bot" && !msg.error ? (
                   <ReactMarkdown
                     components={{
+                      h1: ({ children }) => <h1 className="text-base font-bold mb-2 mt-0.5 text-zinc-900 dark:text-zinc-50">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-sm font-bold mb-1.5 mt-0.5 text-zinc-900 dark:text-zinc-50">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 mt-0.5 text-zinc-800 dark:text-zinc-100">{children}</h3>,
                       p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
                       strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                       ul: ({ children }) => <ul className="list-disc pl-4 mb-1 space-y-0.5">{children}</ul>,
                       ol: ({ children }) => <ol className="list-decimal pl-4 mb-1 space-y-0.5">{children}</ol>,
                       li: ({ children }) => <li>{children}</li>,
+                      hr: () => <hr className="border-zinc-200 dark:border-zinc-700 my-2" />,
                       code: ({ children }) => <code className="bg-zinc-100 dark:bg-zinc-800 rounded px-1 text-xs font-mono">{children}</code>,
                     }}
                   >

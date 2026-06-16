@@ -4,6 +4,8 @@ import type { Content } from "@google/generative-ai";
 import { GALAXY_STATIC_CONTEXT } from "@/lib/sopContext";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { fetchAuditLogs } from "@/lib/firestore/audit";
+import { fetchCallLogs, fetchLeads } from "@/lib/leadsService";
+import { normalizeSheetFromFirestore } from "@/lib/firestore/inventory";
 import { db } from "@/lib/firebase";
 
 // ── Quotation helpers ─────────────────────────────────────────────────────
@@ -115,6 +117,54 @@ function detectProjectQueryType(message: string): QueryType {
 // ── Formatting helpers ─────────────────────────────────────────────────────
 
 type ProjectData = Record<string, unknown>;
+type InventorySheetData = {
+  id: string;
+  name: string;
+  originalUrl: string;
+  spreadsheetId: string;
+  embedUrl: string;
+  createdAt: string;
+  createdBy: {
+    uid: string;
+    displayName: string;
+    email: string;
+  };
+};
+type LeadData = {
+  id: string;
+  name: string;
+  phone: string;
+  whatsapp?: string;
+  email?: string;
+  city: string;
+  address?: string;
+  source: string;
+  propertyType: string;
+  budget?: string;
+  assignedTo?: string;
+  notes?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastCallDate?: string;
+  lastCallOutcome?: string;
+  nextFollowUpDate?: string;
+  nextFollowUpTime?: string;
+  priority?: string;
+  totalCalls: number;
+};
+type CallLogData = {
+  id: string;
+  leadId: string;
+  date: string;
+  time: string;
+  outcome: string;
+  notes?: string;
+  nextFollowUpDate?: string;
+  nextFollowUpTime?: string;
+  priority?: string;
+  createdAt: string;
+};
 
 function clientLabel(data: ProjectData): string {
   return String(data.clientName || data.name || "Unknown");
@@ -170,6 +220,112 @@ function contactIcon(designation: string): string {
   if (d.includes("plumber")) return "🔧";
   if (d.includes("manager")) return "👷";
   return "👤";
+}
+
+function sheetLabel(data: InventorySheetData): string {
+  return String(data.name || "Unnamed sheet");
+}
+
+function fmtInventorySheet(data: InventorySheetData): string {
+  const lines = [`## ${sheetLabel(data)}`];
+  if (data.spreadsheetId) lines.push(`**Spreadsheet ID:** ${String(data.spreadsheetId)}`);
+  if (data.originalUrl) lines.push(`**Source URL:** ${String(data.originalUrl)}`);
+  if (data.embedUrl) lines.push(`**Embed URL:** ${String(data.embedUrl)}`);
+  if (data.createdAt) {
+    const createdAt = new Date(String(data.createdAt));
+    lines.push(`**Created:** ${isNaN(createdAt.getTime()) ? String(data.createdAt) : createdAt.toLocaleDateString("en-IN")}`);
+  }
+  const createdBy = data.createdBy;
+  if (createdBy?.displayName) lines.push(`**Created By:** ${String(createdBy.displayName)}`);
+  else if (createdBy?.email) lines.push(`**Created By:** ${String(createdBy.email)}`);
+  return lines.join("\n");
+}
+
+function leadLabel(data: LeadData): string {
+  return String(data.name || "Unknown lead");
+}
+
+function formatDateValue(value?: string): string {
+  if (!value) return "Not set";
+  const parsed = new Date(String(value));
+  return isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString("en-IN");
+}
+
+function fmtLeadPhone(data: LeadData): string {
+  return [`## ${leadLabel(data)}`, data.phone ? `📞 **Phone:** ${data.phone}` : "_No phone recorded._"].join("\n");
+}
+
+function fmtLeadStatus(data: LeadData): string {
+  return [
+    `## ${leadLabel(data)}`,
+    `**Status:** ${String(data.status || "New Lead")}`,
+    data.priority ? `**Priority:** ${String(data.priority)}` : null,
+    data.totalCalls !== undefined ? `**Total Calls:** ${data.totalCalls}` : null,
+  ].filter(Boolean).join("\n");
+}
+
+function fmtLeadSource(data: LeadData): string {
+  return [`## ${leadLabel(data)}`, `**Source:** ${String(data.source || "Not recorded")}`].join("\n");
+}
+
+function fmtLeadOwner(data: LeadData): string {
+  return [
+    `## ${leadLabel(data)}`,
+    data.assignedTo ? `👤 **Assigned To:** ${data.assignedTo}` : "_No assignee recorded._",
+  ].join("\n");
+}
+
+function fmtLeadFollowUp(data: LeadData): string {
+  return [
+    `## ${leadLabel(data)}`,
+    `**Next Follow-up:** ${formatDateValue(data.nextFollowUpDate)}`,
+    data.nextFollowUpTime ? `**Follow-up Time:** ${data.nextFollowUpTime}` : null,
+  ].filter(Boolean).join("\n");
+}
+
+function fmtLeadAll(data: LeadData): string {
+  const lines = [`## ${leadLabel(data)}`];
+  lines.push(`**Phone:** ${data.phone || "Not recorded"}`);
+  if (data.whatsapp) lines.push(`**WhatsApp:** ${data.whatsapp}`);
+  if (data.email) lines.push(`**Email:** ${data.email}`);
+  lines.push(`**City:** ${data.city || "Not recorded"}`);
+  if (data.address) lines.push(`**Address:** ${data.address}`);
+  lines.push(`**Source:** ${String(data.source || "Not recorded")}`);
+  lines.push(`**Property Type:** ${String(data.propertyType || "Not recorded")}`);
+  if (data.budget) lines.push(`**Budget:** ${data.budget}`);
+  if (data.assignedTo) lines.push(`**Assigned To:** ${data.assignedTo}`);
+  lines.push(`**Status:** ${String(data.status || "New Lead")}`);
+  lines.push(`**Total Calls:** ${data.totalCalls ?? 0}`);
+  lines.push(`**Created:** ${formatDateValue(data.createdAt)}`);
+  lines.push(`**Updated:** ${formatDateValue(data.updatedAt)}`);
+  if (data.lastCallDate) lines.push(`**Last Call:** ${formatDateValue(data.lastCallDate)}`);
+  if (data.lastCallOutcome) lines.push(`**Last Call Outcome:** ${data.lastCallOutcome}`);
+  if (data.nextFollowUpDate) lines.push(`**Next Follow-up:** ${formatDateValue(data.nextFollowUpDate)}`);
+  if (data.nextFollowUpTime) lines.push(`**Follow-up Time:** ${data.nextFollowUpTime}`);
+  if (data.priority) lines.push(`**Priority:** ${data.priority}`);
+  if (data.notes) lines.push(`**Notes:** ${data.notes}`);
+  return lines.join("\n");
+}
+
+function fmtLeadCalls(lead: LeadData, callLogs: CallLogData[]): string {
+  const lines = [`## ${leadLabel(lead)}`, "### Call History"];
+  const calls = callLogs
+    .filter((log) => String(log.leadId ?? "") === lead.id)
+    .slice(0, 10);
+  if (calls.length === 0) {
+    lines.push("_No call logs found._");
+    return lines.join("\n");
+  }
+
+  for (const call of calls) {
+    const date = String(call.date ?? "");
+    const time = String(call.time ?? "");
+    const outcome = String(call.outcome ?? "");
+    const notes = String(call.notes ?? "");
+    lines.push(`- ${date}${time ? ` ${time}` : ""} | ${outcome}${notes ? ` | ${notes}` : ""}`);
+  }
+
+  return lines.join("\n");
 }
 
 // ── Per-type formatters ────────────────────────────────────────────────────
@@ -373,6 +529,28 @@ function isProjectRelated(message: string): boolean {
   return PROJECT_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+const INVENTORY_KEYWORDS = [
+  "inventory", "inventory sheet", "sheet", "spreadsheet", "google sheet", "stock",
+  "product sheet", "catalog", "catalogue", "sheet url", "spreadsheet id", "embed url",
+  "sheet link", "sheet name",
+];
+
+function isInventoryRelated(message: string): boolean {
+  const lower = message.toLowerCase();
+  return INVENTORY_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+const LEAD_KEYWORDS = [
+  "lead", "leads", "follow up", "follow-up", "sales", "prospect", "call log", "call logs",
+  "call history", "pipeline", "conversion", "assigned to", "next follow up", "next follow-up",
+  "hot lead", "new lead",
+];
+
+function isLeadRelated(message: string): boolean {
+  const lower = message.toLowerCase();
+  return LEAD_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 function isRecentSentQuery(message: string): boolean {
   const lower = message.toLowerCase();
   return (
@@ -399,6 +577,153 @@ function scoreProjectMatch(messageTokens: string[], data: ProjectData): number {
     .map((v) => normalizeTokens(String(v)).join(" "));
   const haystack = new Set(normalizeTokens(fields.join(" ")));
   return messageTokens.reduce((score, token) => score + (haystack.has(token) ? 1 : 0), 0);
+}
+
+function scoreInventoryMatch(messageTokens: string[], data: InventorySheetData): number {
+  const fields = [data.name, data.originalUrl, data.spreadsheetId, data.embedUrl]
+    .filter(Boolean)
+    .map((v) => normalizeTokens(String(v)).join(" "));
+  const haystack = new Set(normalizeTokens(fields.join(" ")));
+  return messageTokens.reduce((score, token) => score + (haystack.has(token) ? 1 : 0), 0);
+}
+
+function scoreLeadMatch(messageTokens: string[], data: LeadData): number {
+  const fields = [data.name, data.phone, data.whatsapp, data.email, data.city, data.address, data.source, data.assignedTo, data.status, data.propertyType, data.notes]
+    .filter(Boolean)
+    .map((v) => normalizeTokens(String(v)).join(" "));
+  const haystack = new Set(normalizeTokens(fields.join(" ")));
+  return messageTokens.reduce((score, token) => score + (haystack.has(token) ? 1 : 0), 0);
+}
+
+async function fetchAllLeadsData(): Promise<LeadData[]> {
+  return (await fetchLeads()) as LeadData[];
+}
+
+async function fetchAllCallLogsData(): Promise<CallLogData[]> {
+  return (await fetchCallLogs()) as CallLogData[];
+}
+
+async function findBestLeadMatch(message: string): Promise<LeadData | null> {
+  const leads = await fetchAllLeadsData();
+  if (leads.length === 0) return null;
+
+  const lowerMessage = message.toLowerCase();
+  const messageTokens = normalizeTokens(message);
+  const rawWords = lowerMessage.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+
+  let best: LeadData | null = null;
+  let bestScore = 0;
+
+  for (const lead of leads) {
+    let score = scoreLeadMatch(messageTokens, lead);
+
+    const nameFields = [lead.name, lead.phone, lead.email, lead.city, lead.assignedTo].filter(Boolean).map((v) => String(v).toLowerCase());
+    for (const field of nameFields) {
+      const fieldWords = field.split(/\s+/).filter((w) => w.length >= 2);
+      for (const fw of fieldWords) {
+        if (rawWords.includes(fw)) score += 3;
+        else if (lowerMessage.includes(fw) && fw.length >= 3) score += 2;
+      }
+      for (const mw of rawWords) {
+        if (mw.length >= 3 && field.includes(mw)) score += 1;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = lead;
+    }
+  }
+
+  return bestScore > 0 ? best : null;
+}
+
+async function findNamedLeadInMessage(message: string): Promise<LeadData | null> {
+  const leads = await fetchAllLeadsData();
+  if (leads.length === 0) return null;
+
+  const lowerMessage = message.toLowerCase();
+  const rawWords = lowerMessage.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+
+  for (const lead of leads) {
+    const nameFields = [lead.name, lead.phone, lead.email, lead.city, lead.assignedTo].filter(Boolean).map((v) => String(v).toLowerCase());
+    for (const field of nameFields) {
+      const fieldWords = field.split(/\s+/).filter((w) => w.length >= 2);
+      const allWordsMatch = fieldWords.length > 0 && fieldWords.every((fw) => rawWords.includes(fw));
+      const fullFieldMatch = lowerMessage.includes(field);
+      const singleWordMatch = fieldWords.length === 1 && rawWords.includes(fieldWords[0]);
+      if (allWordsMatch || fullFieldMatch || singleWordMatch) return lead;
+    }
+  }
+
+  return null;
+}
+
+async function fetchAllInventorySheets(): Promise<InventorySheetData[]> {
+  const snapshot = await getDocs(query(collection(db, "inventorySheets"), orderBy("createdAt", "desc")));
+  const docs = snapshot.docs as Array<{ id: string; data: () => Record<string, unknown> }>;
+  const sheets: InventorySheetData[] = [];
+  for (const doc of docs) {
+    const normalized = normalizeSheetFromFirestore(doc.id, doc.data());
+    sheets.push(normalized as unknown as InventorySheetData);
+  }
+  return sheets;
+}
+
+async function findBestInventorySheetMatch(message: string): Promise<InventorySheetData | null> {
+  const sheets = await fetchAllInventorySheets();
+  if (sheets.length === 0) return null;
+
+  const lowerMessage = message.toLowerCase();
+  const messageTokens = normalizeTokens(message);
+  const rawWords = lowerMessage.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+
+  let best: InventorySheetData | null = null;
+  let bestScore = 0;
+
+  for (const sheet of sheets) {
+    let score = scoreInventoryMatch(messageTokens, sheet);
+
+    const nameFields = [sheet.name, sheet.spreadsheetId].filter(Boolean).map((v) => String(v).toLowerCase());
+    for (const field of nameFields) {
+      const fieldWords = field.split(/\s+/).filter((w) => w.length >= 2);
+      for (const fw of fieldWords) {
+        if (rawWords.includes(fw)) score += 3;
+        else if (lowerMessage.includes(fw) && fw.length >= 3) score += 2;
+      }
+      for (const mw of rawWords) {
+        if (mw.length >= 3 && field.includes(mw)) score += 1;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = sheet;
+    }
+  }
+
+  return bestScore > 0 ? best : null;
+}
+
+async function findNamedInventorySheetInMessage(message: string): Promise<InventorySheetData | null> {
+  const sheets = await fetchAllInventorySheets();
+  if (sheets.length === 0) return null;
+
+  const lowerMessage = message.toLowerCase();
+  const rawWords = lowerMessage.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length >= 2);
+
+  for (const sheet of sheets) {
+    const nameFields = [sheet.name, sheet.spreadsheetId].filter(Boolean).map((v) => String(v).toLowerCase());
+    for (const field of nameFields) {
+      const fieldWords = field.split(/\s+/).filter((w) => w.length >= 2);
+      const allWordsMatch = fieldWords.length > 0 && fieldWords.every((fw) => rawWords.includes(fw));
+      const fullFieldMatch = lowerMessage.includes(field);
+      const singleWordMatch = fieldWords.length === 1 && rawWords.includes(fieldWords[0]);
+      if (allWordsMatch || fullFieldMatch || singleWordMatch) return sheet;
+    }
+  }
+
+  return null;
 }
 
 async function findBestProjectMatch(message: string): Promise<ProjectData | null> {
@@ -516,6 +841,80 @@ async function fetchAllProjectsContext(message: string): Promise<string> {
   }
 }
 
+async function fetchAllInventoryContext(message: string): Promise<string> {
+  try {
+    const sheets = await fetchAllInventorySheets();
+    if (sheets.length === 0) return "No inventory sheets found.";
+
+    const lowerMessage = message.toLowerCase();
+    const lines: string[] = ["Inventory Sheets in Galaxy System:\n"];
+
+    for (const sheet of sheets) {
+      const nameMatch = String(sheet.name ?? "").toLowerCase();
+      const idMatch = String(sheet.spreadsheetId ?? "").toLowerCase();
+      if (
+        message.length > 5 &&
+        nameMatch && !lowerMessage.includes(nameMatch) &&
+        idMatch && !lowerMessage.includes(idMatch)
+      ) continue;
+
+      lines.push(`Sheet: ${sheet.name || "Unnamed"}`);
+      if (sheet.spreadsheetId) lines.push(`  Spreadsheet ID: ${sheet.spreadsheetId}`);
+      if (sheet.originalUrl) lines.push(`  Source URL: ${sheet.originalUrl}`);
+      if (sheet.embedUrl) lines.push(`  Embed URL: ${sheet.embedUrl}`);
+      if (sheet.createdAt) lines.push(`  Created: ${sheet.createdAt}`);
+      if (sheet.createdBy?.displayName) lines.push(`  Created By: ${sheet.createdBy.displayName}`);
+      else if (sheet.createdBy?.email) lines.push(`  Created By: ${sheet.createdBy.email}`);
+      lines.push("");
+    }
+
+    return lines.join("\n");
+  } catch {
+    return "Unable to fetch inventory data at this time.";
+  }
+}
+
+async function fetchAllLeadsContext(message: string): Promise<string> {
+  try {
+    const leads = await fetchAllLeadsData();
+    if (leads.length === 0) return "No leads found.";
+
+    const lowerMessage = message.toLowerCase();
+    const lines: string[] = ["Leads in Galaxy System:\n"];
+
+    for (const lead of leads) {
+      const nameMatch = String(lead.name ?? "").toLowerCase();
+      const cityMatch = String(lead.city ?? "").toLowerCase();
+      const phoneMatch = String(lead.phone ?? "").toLowerCase();
+      const assigneeMatch = String(lead.assignedTo ?? "").toLowerCase();
+      if (
+        message.length > 5 &&
+        nameMatch && !lowerMessage.includes(nameMatch) &&
+        cityMatch && !lowerMessage.includes(cityMatch) &&
+        phoneMatch && !lowerMessage.includes(phoneMatch) &&
+        assigneeMatch && !lowerMessage.includes(assigneeMatch)
+      ) continue;
+
+      lines.push(`Lead: ${lead.name || "Unnamed"}`);
+      if (lead.phone) lines.push(`  Phone: ${lead.phone}`);
+      if (lead.city) lines.push(`  City: ${lead.city}`);
+      if (lead.status) lines.push(`  Status: ${lead.status}`);
+      if (lead.source) lines.push(`  Source: ${lead.source}`);
+      if (lead.propertyType) lines.push(`  Property Type: ${lead.propertyType}`);
+      if (lead.assignedTo) lines.push(`  Assigned To: ${lead.assignedTo}`);
+      if (lead.priority) lines.push(`  Priority: ${lead.priority}`);
+      if (lead.nextFollowUpDate) lines.push(`  Next Follow-up: ${lead.nextFollowUpDate}${lead.nextFollowUpTime ? ` ${lead.nextFollowUpTime}` : ""}`);
+      if (lead.lastCallOutcome) lines.push(`  Last Call Outcome: ${lead.lastCallOutcome}`);
+      if (lead.totalCalls !== undefined) lines.push(`  Total Calls: ${lead.totalCalls}`);
+      lines.push("");
+    }
+
+    return lines.join("\n");
+  } catch {
+    return "Unable to fetch lead data at this time.";
+  }
+}
+
 // ── LLM generators ────────────────────────────────────────────────────────
 
 type HistoryEntry = { role: "user" | "bot"; content: string };
@@ -586,13 +985,15 @@ async function generateWithOllama(message: string, systemPrompt: string, history
       model: "qwen3:8b",
       prompt: fullPrompt,
       stream: false,
-      options: { num_predict: 600, temperature: 0.7, num_ctx: 8192 },
+      options: { num_predict: 1200, temperature: 0.7, num_ctx: 8192 },
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(90000),
   });
 
   if (!res.ok) throw new Error(`Ollama returned ${res.status}`);
-  return (await res.json()).response;
+  const raw: string = (await res.json()).response ?? "";
+  // Qwen3 and other reasoning models prepend <think>…</think> blocks — strip them
+  return raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────
@@ -604,7 +1005,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
     }
 
-    const answeredBy = model === "ollama" ? "ollama" : "gemini";
+    let answeredBy: "gemini" | "ollama" = model === "ollama" ? "ollama" : "gemini";
 
     // 1. Named-project first-pass — skip if user is asking about quotations
     if (!isQuotationRelated(message)) {
@@ -614,6 +1015,36 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           answer: formatByQueryType(queryType, namedProject),
           source: "Live Project Data",
+          answeredBy,
+        });
+      }
+
+      const namedInventorySheet = await findNamedInventorySheetInMessage(message);
+      if (namedInventorySheet) {
+        return NextResponse.json({
+          answer: fmtInventorySheet(namedInventorySheet),
+          source: "Live Inventory Data",
+          answeredBy,
+        });
+      }
+
+      const namedLead = await findNamedLeadInMessage(message);
+      if (namedLead) {
+        const leadQuestion = message.toLowerCase();
+        let answer = fmtLeadAll(namedLead);
+        if (leadQuestion.includes("phone") || leadQuestion.includes("number") || leadQuestion.includes("contact")) answer = fmtLeadPhone(namedLead);
+        else if (leadQuestion.includes("status") || leadQuestion.includes("progress")) answer = fmtLeadStatus(namedLead);
+        else if (leadQuestion.includes("source")) answer = fmtLeadSource(namedLead);
+        else if (leadQuestion.includes("assigned") || leadQuestion.includes("owner") || leadQuestion.includes("manager")) answer = fmtLeadOwner(namedLead);
+        else if (leadQuestion.includes("follow") || leadQuestion.includes("callback") || leadQuestion.includes("next call")) answer = fmtLeadFollowUp(namedLead);
+        else if (leadQuestion.includes("call history") || leadQuestion.includes("call log") || leadQuestion.includes("calls")) {
+          const callLogs = await fetchAllCallLogsData();
+          answer = fmtLeadCalls(namedLead, callLogs);
+        }
+
+        return NextResponse.json({
+          answer,
+          source: "Live Lead Data",
           answeredBy,
         });
       }
@@ -646,13 +1077,74 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Fall through to LLM with optional project/quotation context
+    // 4. Generic inventory-related query: find best fuzzy match and format
+    if (isInventoryRelated(message)) {
+      const inventorySheet = await findBestInventorySheetMatch(message);
+      if (inventorySheet) {
+        return NextResponse.json({
+          answer: fmtInventorySheet(inventorySheet),
+          source: "Live Inventory Data",
+          answeredBy,
+        });
+      }
+    }
+
+    if (isLeadRelated(message)) {
+      const lead = await findBestLeadMatch(message);
+      if (lead) {
+        const lower = message.toLowerCase();
+        let answer = fmtLeadAll(lead);
+        if (lower.includes("phone") || lower.includes("number") || lower.includes("contact")) answer = fmtLeadPhone(lead);
+        else if (lower.includes("status") || lower.includes("progress")) answer = fmtLeadStatus(lead);
+        else if (lower.includes("source")) answer = fmtLeadSource(lead);
+        else if (lower.includes("assigned") || lower.includes("owner") || lower.includes("manager")) answer = fmtLeadOwner(lead);
+        else if (lower.includes("follow") || lower.includes("callback") || lower.includes("next call")) answer = fmtLeadFollowUp(lead);
+        else if (lower.includes("call history") || lower.includes("call log") || lower.includes("calls")) {
+          const callLogs = await fetchAllCallLogsData();
+          answer = fmtLeadCalls(lead, callLogs);
+        }
+
+        return NextResponse.json({
+          answer,
+          source: "Live Lead Data",
+          answeredBy,
+        });
+      }
+    }
+
+    // 5. Fall through to LLM with optional project/inventory/lead/quotation context
     let dynamicContext = "";
     let source = "Galaxy SOP Knowledge Base";
 
-    if (isProjectRelated(message)) {
+    const includeProjectContext = isProjectRelated(message);
+    const includeInventoryContext = isInventoryRelated(message);
+    const includeLeadContext = isLeadRelated(message);
+
+    if (includeProjectContext) {
       dynamicContext = await fetchAllProjectsContext(message);
       source = "Galaxy SOP Knowledge Base + Live Project Data";
+    }
+
+    if (includeInventoryContext) {
+      const inventoryCtx = await fetchAllInventoryContext(message);
+      dynamicContext += dynamicContext ? `\n\n${inventoryCtx}` : inventoryCtx;
+      source = source.includes("Project")
+        ? "Galaxy SOP Knowledge Base + Live Project & Inventory Data"
+        : "Galaxy SOP Knowledge Base + Live Inventory Data";
+    }
+
+    if (includeLeadContext) {
+      const leadCtx = await fetchAllLeadsContext(message);
+      dynamicContext += dynamicContext ? `\n\n${leadCtx}` : leadCtx;
+      if (source.includes("Project") && source.includes("Inventory")) {
+        source = "Galaxy SOP Knowledge Base + Live Project, Inventory & Lead Data";
+      } else if (source.includes("Project")) {
+        source = "Galaxy SOP Knowledge Base + Live Project & Lead Data";
+      } else if (source.includes("Inventory")) {
+        source = "Galaxy SOP Knowledge Base + Live Inventory & Lead Data";
+      } else {
+        source = "Galaxy SOP Knowledge Base + Live Lead Data";
+      }
     }
 
     if (isQuotationRelated(message)) {
@@ -660,9 +1152,23 @@ export async function POST(req: NextRequest) {
         const quotes = await fetchAllQuotes();
         const quotesCtx = formatQuotesContext(quotes);
         dynamicContext += `\n\nLIVE QUOTATION DATA:\n${quotesCtx}`;
-        source = source.includes("Project")
-          ? "Galaxy SOP Knowledge Base + Live Project & Quotation Data"
-          : "Galaxy SOP Knowledge Base + Live Quotation Data";
+        if (source.includes("Project") && source.includes("Inventory")) {
+          source = includeLeadContext
+            ? "Galaxy SOP Knowledge Base + Live Project, Inventory, Lead & Quotation Data"
+            : "Galaxy SOP Knowledge Base + Live Project, Inventory & Quotation Data";
+        } else if (source.includes("Project")) {
+          source = includeLeadContext
+            ? "Galaxy SOP Knowledge Base + Live Project, Lead & Quotation Data"
+            : "Galaxy SOP Knowledge Base + Live Project & Quotation Data";
+        } else if (source.includes("Inventory")) {
+          source = includeLeadContext
+            ? "Galaxy SOP Knowledge Base + Live Inventory, Lead & Quotation Data"
+            : "Galaxy SOP Knowledge Base + Live Inventory & Quotation Data";
+        } else if (includeLeadContext) {
+          source = "Galaxy SOP Knowledge Base + Live Lead & Quotation Data";
+        } else {
+          source = "Galaxy SOP Knowledge Base + Live Quotation Data";
+        }
       } catch (e) {
         console.error("Failed to fetch quotations:", e);
       }
@@ -691,6 +1197,7 @@ ${dynamicContext ? `\n---\nLIVE DATA:\n${dynamicContext}` : ""}`;
       } catch (ollamaErr) {
         console.error("Ollama failed, falling back to Gemini:", ollamaErr);
         answer = await generateWithGemini(message, systemPrompt, history);
+        answeredBy = "gemini";
         source += " (Ollama unavailable, used Gemini)";
       }
     } else {
