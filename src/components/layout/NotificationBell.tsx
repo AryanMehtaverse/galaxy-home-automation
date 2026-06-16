@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { collection, query, orderBy, limit, onSnapshot, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuthContext } from "@/components/providers/AuthProvider";
@@ -20,6 +21,7 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date>(() => new Date());
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role === "admin" || user?.role === "owner";
@@ -59,6 +61,13 @@ export function NotificationBell() {
   });
 
   const handleOpen = () => {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.top - 8, // will be placed above via transform
+        left: rect.right + 8,
+      });
+    }
     setOpen(!open);
     if (!open) setLastSeen(new Date());
   };
@@ -99,8 +108,11 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 bottom-full mb-2 w-80 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl z-[200] overflow-hidden">
+      {open && typeof window !== "undefined" && createPortal(
+        <div
+          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, transform: "translateY(-100%)", zIndex: 9999 }}
+          className="w-80 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden"
+        >
           <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
             <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Notifications</p>
           </div>
@@ -124,7 +136,8 @@ export function NotificationBell() {
               </Link>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
