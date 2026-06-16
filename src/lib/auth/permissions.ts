@@ -12,7 +12,7 @@ export function hasRole(user: AppUser | null | undefined, roles: AppRole[]): boo
 // site_worker: My Sites + SOP Bot
 
 export function canAccessDashboard(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "owner", "clerk"]);
+  return hasRole(user, ["admin", "project_manager", "owner", "clerk"]);
 }
 
 export function canAccessAlerts(user: AppUser | null | undefined): boolean {
