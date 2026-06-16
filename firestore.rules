@@ -78,8 +78,9 @@ service cloud.firestore {
 
     // ── authorized_users ─────────────────────────────────────────────────────
     match /authorized_users/{uid} {
-      // All active users can read the list (home page Our People grid + role dropdowns)
-      allow read: if isAuthorizedActive() || (isAuthenticated() && request.auth.uid == uid);
+      // Any authenticated user can read their own doc (needed BEFORE isAuthorizedActive check in login flow)
+      // Active users can read all docs (Our People grid + role dropdowns)
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAuthorizedActive());
       // Admins can update any user; users can create their own (auto-registration)
       allow create: if isAuthenticated() && request.auth.uid == uid;
       allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == uid &&
