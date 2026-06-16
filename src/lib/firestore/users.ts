@@ -43,9 +43,10 @@ function docToUser(id: string, data: Record<string, unknown>): ManagedUser {
 }
 
 export function subscribeToUsers(callback: (users: ManagedUser[]) => void): Unsubscribe {
-  const q = query(collection(db, "authorized_users"), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
+  return onSnapshot(collection(db, "authorized_users"), (snap) => {
     const users = snap.docs.map((d) => docToUser(d.id, d.data() as Record<string, unknown>));
+    // Sort client-side to avoid needing a Firestore index
+    users.sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
     callback(users);
   });
 }
