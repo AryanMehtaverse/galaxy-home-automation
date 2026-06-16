@@ -180,8 +180,8 @@ function AdminSiteDetailContent() {
             )}
           </div>
         )}
-        {tab === "photos" && <PhotoUpload siteId={siteId} />}
-        {tab === "reports" && <WrittenReport siteId={siteId} />}
+        {tab === "photos" && <PhotoUpload siteId={siteId} readOnly />}
+        {tab === "reports" && <WrittenReport siteId={siteId} readOnly />}
         {tab === "voice" && <VoiceReportViewer siteId={siteId} />}
         {tab === "timeline" && <SiteTimeline siteId={siteId} />}
       </div>

@@ -9,9 +9,10 @@ const CATEGORIES: SitePhoto["category"][] = ["Before Work", "During Work", "Afte
 
 interface Props {
   siteId: string;
+  readOnly?: boolean;
 }
 
-export function PhotoUpload({ siteId }: Props) {
+export function PhotoUpload({ siteId, readOnly = false }: Props) {
   const { user } = useAuthContext();
   const [photos, setPhotos] = useState<SitePhoto[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<SitePhoto["category"]>("Before Work");
@@ -62,8 +63,8 @@ export function PhotoUpload({ siteId }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Upload area */}
-      <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4 space-y-4">
+      {/* Upload area — hidden for read-only */}
+      {!readOnly && <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4 space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={selectedCategory}
@@ -120,7 +121,7 @@ export function PhotoUpload({ siteId }: Props) {
           </div>
         )}
         {error && <p className="text-sm text-red-500">{error}</p>}
-      </div>
+      </div>}
 
       {/* Photo gallery by category */}
       {CATEGORIES.map((cat) => (

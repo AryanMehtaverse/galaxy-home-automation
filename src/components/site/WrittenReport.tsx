@@ -7,6 +7,7 @@ import type { SiteReport } from "@/types/site";
 
 interface Props {
   siteId: string;
+  readOnly?: boolean;
 }
 
 const EMPTY_FORM = {
@@ -17,7 +18,7 @@ const EMPTY_FORM = {
   notes: "",
 };
 
-export function WrittenReport({ siteId }: Props) {
+export function WrittenReport({ siteId, readOnly = false }: Props) {
   const { user } = useAuthContext();
   const [reports, setReports] = useState<SiteReport[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -66,7 +67,7 @@ export function WrittenReport({ siteId }: Props) {
         </div>
       )}
 
-      {!showForm && (
+      {!readOnly && !showForm && (
         <button
           onClick={() => setShowForm(true)}
           className="w-full rounded-lg border border-dashed border-amber-400 dark:border-amber-600 py-3 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors"
@@ -75,7 +76,7 @@ export function WrittenReport({ siteId }: Props) {
         </button>
       )}
 
-      {showForm && (
+      {!readOnly && showForm && (
         <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-3">
           {error && (
             <p className="text-sm text-red-500">{error}</p>
