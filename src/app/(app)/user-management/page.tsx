@@ -5,26 +5,30 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 import { subscribeToUsers, updateUserProfile, type ManagedUser } from "@/lib/firestore/users";
 import type { AppRole } from "@/types/auth";
 
-const ALL_ROLES: AppRole[] = ["admin", "project_manager", "site_worker", "bd_team", "accounts", "owner", "clerk", "unassigned"];
+const ALL_ROLES: AppRole[] = ["admin", "owner", "project_manager", "bd_team", "site_manager", "field_team", "site_worker", "accounts", "clerk", "unassigned"];
 
 const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
-  project_manager: "Project Manager",
-  site_worker: "Site Worker",
-  bd_team: "BD Team",
-  accounts: "Accounts",
   owner: "Owner",
+  project_manager: "Project Manager",
+  bd_team: "BD Team",
+  site_manager: "Site Manager",
+  field_team: "Field Team",
+  site_worker: "Site Worker",
+  accounts: "Accounts",
   clerk: "Clerk",
   unassigned: "Unassigned",
 };
 
 const ROLE_COLORS: Record<AppRole, string> = {
   admin: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  project_manager: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  site_worker: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  bd_team: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  accounts: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
   owner: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  project_manager: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  bd_team: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  site_manager: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",
+  field_team: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  site_worker: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  accounts: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
   clerk: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
   unassigned: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
 };
