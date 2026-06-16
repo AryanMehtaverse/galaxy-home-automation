@@ -6,44 +6,49 @@ export function hasRole(user: AppUser | null | undefined, roles: AppRole[]): boo
   return roles.includes(user.role);
 }
 
-export function canAccessSiteOperations(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "project_manager", "owner"]);
+// admin sees everything
+// bd_team: Leads + SOP Bot
+// project_manager: New Project + Quotations + SOP Bot
+// site_worker: My Sites + SOP Bot
+
+export function canAccessDashboard(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["admin", "owner", "clerk"]);
 }
 
-export function canAccessMySites(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["site_worker"]);
-}
-
-export function canAccessLeads(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "bd_team", "owner"]);
-}
-
-export function canAccessQuotations(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "accounts", "owner", "clerk"]);
+export function canAccessAlerts(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["admin", "owner", "clerk"]);
 }
 
 export function canAccessInventory(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "project_manager", "owner", "clerk"]);
+  return hasRole(user, ["admin", "owner", "clerk"]);
 }
 
 export function canAccessNewProject(user: AppUser | null | undefined): boolean {
   return hasRole(user, ["admin", "project_manager", "owner", "clerk"]);
 }
 
-export function canAccessDashboard(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "bd_team", "project_manager", "accounts", "owner", "clerk"]);
-}
-
-export function canAccessAlerts(user: AppUser | null | undefined): boolean {
+export function canAccessQuotations(user: AppUser | null | undefined): boolean {
   return hasRole(user, ["admin", "project_manager", "owner", "clerk"]);
 }
 
+export function canAccessLeads(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["admin", "bd_team", "owner"]);
+}
+
+export function canAccessSiteOperations(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["admin", "owner"]);
+}
+
+export function canAccessMySites(user: AppUser | null | undefined): boolean {
+  return hasRole(user, ["site_worker"]);
+}
+
 export function canManageSiteAssignments(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "project_manager", "owner"]);
+  return hasRole(user, ["admin", "owner"]);
 }
 
 export function canUpdateSiteStatus(user: AppUser | null | undefined): boolean {
-  return hasRole(user, ["admin", "project_manager", "site_worker", "owner"]);
+  return hasRole(user, ["admin", "site_worker", "owner"]);
 }
 
 export function canCreateProject(user: AppUser | null | undefined): boolean {
