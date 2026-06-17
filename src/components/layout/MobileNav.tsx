@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
+import { NotificationBell } from "./NotificationBell";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -26,7 +27,7 @@ export function MobileNav() {
         <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
           Galaxy Dashboard
         </span>
-        <div className="w-10" />
+        <NotificationBell />
       </header>
 
       {open && (

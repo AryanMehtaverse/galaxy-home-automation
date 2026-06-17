@@ -7,12 +7,57 @@ import {
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { mapFirebaseUser } from "@/lib/auth/user";
 import type { AppUser } from "@/types/auth";
 
 const googleProvider = new GoogleAuthProvider();
+
+async function resolveUser(firebaseUser: import("firebase/auth").User): Promise<{ user: AppUser | null; error: string | null }> {
+  const userDocRef = doc(db, "authorized_users", firebaseUser.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (!userDoc.exists()) {
+    // Auto-create with unassigned role
+    await setDoc(userDocRef, {
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName ?? "",
+      email: firebaseUser.email ?? "",
+      role: "unassigned",
+      active: true,
+      createdAt: serverTimestamp(),
+      lastLogin: serverTimestamp(),
+    });
+    return {
+      user: {
+        ...mapFirebaseUser(firebaseUser),
+        role: "unassigned",
+        active: true,
+      },
+      error: null,
+    };
+  }
+
+  const data = userDoc.data();
+
+  if (data.active === false) {
+    await signOut(auth);
+    return { user: null, error: "Access denied. Your account has been disabled." };
+  }
+
+  // Update lastLogin
+  await updateDoc(userDocRef, { lastLogin: serverTimestamp() }).catch(() => {});
+
+  return {
+    user: {
+      ...mapFirebaseUser(firebaseUser),
+      role: data.role,
+      active: data.active,
+    },
+    error: null,
+  };
+}
 
 export function useAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -24,27 +69,9 @@ export function useAuth() {
       if (firebaseUser) {
         setLoading(true);
         try {
-          const userDocRef = doc(db, "authorized_users", firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (!userDoc.exists()) {
-            await signOut(auth);
-            setUser(null);
-            setAuthError("Access denied. Your account is not authorized.");
-          } else {
-            const data = userDoc.data();
-            if (data.active === false) {
-              await signOut(auth);
-              setUser(null);
-              setAuthError("Access denied. Your account is inactive.");
-            } else {
-              setUser({
-                ...mapFirebaseUser(firebaseUser),
-                role: data.role,
-                active: data.active,
-              });
-              setAuthError(null);
-            }
-          }
+          const { user: resolved, error } = await resolveUser(firebaseUser);
+          setUser(resolved);
+          setAuthError(error);
         } catch (err) {
           console.error("Error checking user authorization:", err);
           await signOut(auth);
@@ -63,29 +90,12 @@ export function useAuth() {
     setAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const firebaseUser = result.user;
-      
-      const userDocRef = doc(db, "authorized_users", firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      if (!userDoc.exists()) {
-        await signOut(auth);
-        throw new Error("Access denied. Your account is not authorized.");
+      const { user: resolved, error } = await resolveUser(result.user);
+      if (error) {
+        throw new Error(error);
       }
-      
-      const data = userDoc.data();
-      if (data.active === false) {
-        await signOut(auth);
-        throw new Error("Access denied. Your account is inactive.");
-      }
-      
-      const mapped = {
-        ...mapFirebaseUser(firebaseUser),
-        role: data.role,
-        active: data.active,
-      };
-      setUser(mapped);
-      return mapped;
+      setUser(resolved);
+      return resolved!;
     } catch (err) {
       console.error("Sign in error:", err);
       throw err;

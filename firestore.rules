@@ -2,79 +2,167 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function getUserData() {
       return get(/databases/$(database)/documents/authorized_users/$(request.auth.uid)).data;
     }
-    
+
     function isEmailAuthorized() {
       return exists(/databases/$(database)/documents/authorized_users/$(request.auth.uid));
     }
-    
+
     function isActive() {
       return getUserData().active == true;
     }
-    
+
     function getRole() {
       return getUserData().role;
     }
-    
-    function isAdmin() {
-      return isAuthenticated() && isEmailAuthorized() && isActive() && getRole() == 'admin';
-    }
-    
-    function isOwner() {
-      return isAuthenticated() && isEmailAuthorized() && isActive() && getRole() == 'owner';
-    }
-    
-    function isClerk() {
-      return isAuthenticated() && isEmailAuthorized() && isActive() && getRole() == 'clerk';
+
+    function isAuthorizedActive() {
+      return isAuthenticated() && isEmailAuthorized() && isActive();
     }
 
-    // Rules for authorized_users collection
-    match /authorized_users/{uid} {
-      // Users can read their own role document to verify access
-      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      // Only admins can write (create, update, delete) user roles
-      allow write: if isAdmin();
+    function isAdmin() {
+      return isAuthorizedActive() && getRole() == 'admin';
     }
-    
-    // Rules for projects collection
+
+    function isOwner() {
+      return isAuthorizedActive() && getRole() == 'owner';
+    }
+
+    function isClerk() {
+      return isAuthorizedActive() && getRole() == 'clerk';
+    }
+
+    function isProjectManager() {
+      return isAuthorizedActive() && getRole() == 'project_manager';
+    }
+
+    function isSiteWorker() {
+      return isAuthorizedActive() && getRole() == 'site_worker';
+    }
+
+    function isSiteManager() {
+      return isAuthorizedActive() && getRole() == 'site_manager';
+    }
+
+    function isFieldTeam() {
+      return isAuthorizedActive() && getRole() == 'field_team';
+    }
+
+    function isSiteRole() {
+      return isSiteManager() || isFieldTeam() || isSiteWorker();
+    }
+
+    function isBDTeam() {
+      return isAuthorizedActive() && getRole() == 'bd_team';
+    }
+
+    function isAccounts() {
+      return isAuthorizedActive() && getRole() == 'accounts';
+    }
+
+    function isAdminOrOwner() {
+      return isAdmin() || isOwner();
+    }
+
+    function isAdminOwnerOrManager() {
+      return isAdmin() || isOwner() || isProjectManager();
+    }
+
+    // ── authorized_users ─────────────────────────────────────────────────────
+    match /authorized_users/{uid} {
+      // Any authenticated user can read their own doc (needed BEFORE isAuthorizedActive check in login flow)
+      // Active users can read all docs (Our People grid + role dropdowns)
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAuthorizedActive());
+      // Admins can update any user; users can create their own (auto-registration)
+      allow create: if isAuthenticated() && request.auth.uid == uid;
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == uid &&
+        // Users can only update lastLogin on their own doc, not role
+        !('role' in request.resource.data.diff(resource.data).affectedKeys()) &&
+        !('active' in request.resource.data.diff(resource.data).affectedKeys()));
+      allow delete: if isAdmin();
+    }
+
+    // ── projects ─────────────────────────────────────────────────────────────
     match /projects/{projectId} {
-      // Anyone with an active authorized account can read any project
-      allow read: if isAuthenticated() && isEmailAuthorized() && isActive();
-      
-      // Creating projects: admin, owner, clerk are all allowed to create projects
-      allow create: if isAuthenticated() && isEmailAuthorized() && isActive() && (getRole() == 'admin' || getRole() == 'owner' || getRole() == 'clerk');
-      
-      // Updating or Deleting projects: admins, owners, or clerks who created the project
-      allow update, delete: if isAuthenticated() && isEmailAuthorized() && isActive() && (
-        getRole() == 'admin' || 
-        getRole() == 'owner' || 
+      allow read: if isAuthorizedActive();
+
+      allow create: if isAuthorizedActive() && (
+        getRole() == 'admin' || getRole() == 'owner' || getRole() == 'clerk' || getRole() == 'project_manager'
+      );
+
+      allow update, delete: if isAuthorizedActive() && (
+        getRole() == 'admin' ||
+        getRole() == 'owner' ||
+        getRole() == 'project_manager' ||
         (getRole() == 'clerk' && resource.data.createdByUid == request.auth.uid)
       );
-      
-      // Rules for nested subcollections (such as photos)
+
       match /{allSubcollections=**} {
-        allow read: if isAuthenticated() && isEmailAuthorized() && isActive();
-        
-        allow create: if isAuthenticated() && isEmailAuthorized() && isActive() && (
-          getRole() == 'admin' || 
-          getRole() == 'owner' || 
+        allow read: if isAuthorizedActive();
+        allow create: if isAuthorizedActive() && (
+          getRole() == 'admin' || getRole() == 'owner' || getRole() == 'project_manager' ||
           (getRole() == 'clerk' && get(/databases/$(database)/documents/projects/$(projectId)).data.createdByUid == request.auth.uid)
         );
-        
-        allow update, delete: if isAuthenticated() && isEmailAuthorized() && isActive() && (
-          getRole() == 'admin' || 
-          getRole() == 'owner' || 
+        allow update, delete: if isAuthorizedActive() && (
+          getRole() == 'admin' || getRole() == 'owner' || getRole() == 'project_manager' ||
           (getRole() == 'clerk' && get(/databases/$(database)/documents/projects/$(projectId)).data.createdByUid == request.auth.uid)
         );
       }
+    }
+
+    // ── siteAssignments ──────────────────────────────────────────────────────
+    match /siteAssignments/{assignmentId} {
+      allow read: if isAuthorizedActive() && (
+        isAdminOwnerOrManager() ||
+        (isSiteManager() && resource.data.siteManagerId == request.auth.uid) ||
+        ((isFieldTeam() || isSiteWorker()) && resource.data.assignedTo == request.auth.uid)
+      );
+      // list queries (onSnapshot with where filter) — site roles can list to filter client-side
+      allow list: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAdminOrOwner();
+      allow update: if isAuthorizedActive() && (
+        isAdminOwnerOrManager() ||
+        (isSiteManager() && resource.data.siteManagerId == request.auth.uid) ||
+        ((isFieldTeam() || isSiteWorker()) && resource.data.assignedTo == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
+      );
+      allow delete: if isAdminOrOwner();
+    }
+
+    // ── siteTimeline ─────────────────────────────────────────────────────────
+    match /siteTimeline/{entryId} {
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow update, delete: if isAdminOrOwner();
+    }
+
+    // ── sitePhotos ───────────────────────────────────────────────────────────
+    match /sitePhotos/{photoId} {
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow update, delete: if isAdminOwnerOrManager();
+    }
+
+    // ── siteReports ──────────────────────────────────────────────────────────
+    match /siteReports/{reportId} {
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow update, delete: if isAdminOwnerOrManager();
+    }
+
+    // ── voiceReports ─────────────────────────────────────────────────────────
+    match /voiceReports/{reportId} {
+      allow read: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow create: if isAuthorizedActive() && (isAdminOwnerOrManager() || isSiteRole());
+      allow update, delete: if isAdminOwnerOrManager();
     }
   }
 }
