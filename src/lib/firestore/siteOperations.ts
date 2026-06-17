@@ -3,6 +3,7 @@ import {
   doc,
   addDoc,
   updateDoc,
+  deleteDoc,
   getDocs,
   onSnapshot,
   query,
@@ -152,6 +153,10 @@ export async function updateSiteAssignment(
       userName,
     });
   }
+}
+
+export async function deleteSiteAssignment(id: string): Promise<void> {
+  await deleteDoc(doc(db, "siteAssignments", id));
 }
 
 export async function updateSiteStatus(

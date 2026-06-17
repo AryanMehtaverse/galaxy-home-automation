@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import { subscribeToAllSiteAssignments, updateSiteStatus } from "@/lib/firestore/siteOperations";
+import { subscribeToAllSiteAssignments, updateSiteStatus, deleteSiteAssignment } from "@/lib/firestore/siteOperations";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { SiteTimeline } from "@/components/site/SiteTimeline";
 import { PhotoUpload } from "@/components/site/PhotoUpload";
@@ -58,6 +58,19 @@ function AdminSiteDetailContent() {
       setShowStatusPicker(false);
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!site) return;
+    if (window.confirm(`Are you sure you want to delete the site assignment for "${site.projectName}"?`)) {
+      try {
+        await deleteSiteAssignment(siteId);
+        router.push("/site-operations");
+      } catch (error) {
+        alert("Failed to delete assignment.");
+        console.error(error);
+      }
     }
   };
 
@@ -123,6 +136,14 @@ function AdminSiteDetailContent() {
               </div>
             )}
           </div>
+          {(user?.role === "admin" || user?.role === "owner") && (
+            <button
+              onClick={handleDelete}
+              className="rounded-lg bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+            >
+              Delete Site
+            </button>
+          )}
         </div>
       </div>
 
