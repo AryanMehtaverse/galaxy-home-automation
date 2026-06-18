@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Content } from "@google/generative-ai";
+import Fuse from "fuse.js";
 import { GALAXY_STATIC_CONTEXT } from "@/lib/sopContext";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { fetchAuditLogs } from "@/lib/firestore/audit";
 import { fetchCallLogs, fetchLeads } from "@/lib/leadsService";
 import { normalizeSheetFromFirestore } from "@/lib/firestore/inventory";
-import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-admin";
+import productsJson from "@/data/products.json";
 
 // ── Quotation helpers ─────────────────────────────────────────────────────
 
@@ -81,6 +81,178 @@ function formatQuotesContext(quotes: any[]): string {
     lines.push("");
   }
   return lines.join("\n");
+}
+
+// ── Fuzzy product matching ────────────────────────────────────────────────
+
+type CatalogProduct = {
+  name: string;
+  gsp: number;
+  category: string;
+  partCode?: string;
+};
+
+const CATALOG_PRODUCTS: CatalogProduct[] = (productsJson as any[])
+  .filter((p) => p.active !== false)
+  .map((p) => ({
+    name: String(p.name ?? ""),
+    gsp: Number(p.gsp ?? p.price ?? 0),
+    category: String(p.category ?? ""),
+    partCode: p.partCode ? String(p.partCode) : undefined,
+  }));
+
+const SOP_PRICE_LINE_RE = /^-\s+(.+?):\s+GSP\s+[\d,]+/;
+
+const SOP_PRODUCT_NAMES: string[] = (() => {
+  const names: string[] = [];
+  for (const line of GALAXY_STATIC_CONTEXT.split("\n")) {
+    const m = line.trim().match(SOP_PRICE_LINE_RE);
+    if (m) names.push(m[1].trim());
+  }
+  return names;
+})();
+
+const ALL_PRODUCT_NAMES: string[] = [
+  ...CATALOG_PRODUCTS.map((p) => p.name),
+  ...SOP_PRODUCT_NAMES,
+];
+
+const productFuse = new Fuse(
+  ALL_PRODUCT_NAMES.map((name) => ({ name })),
+  { keys: ["name"], threshold: 0.4, includeScore: true, ignoreLocation: true }
+);
+
+const PRICE_QUERY_KEYWORDS = [
+  "price", "cost", "rate", "kitna", "kya price", "how much",
+  "gsp", "dsp", "mrp", "discount", "pricing",
+];
+
+function isPriceQuery(message: string): boolean {
+  const lower = message.toLowerCase();
+  return PRICE_QUERY_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+const FILLER_WORDS = new Set([
+  "the", "a", "an", "of", "for", "and", "or", "in", "on", "is", "are",
+  "what", "how", "much", "does", "do", "can", "will", "with", "its",
+  "price", "cost", "rate", "gsp", "dsp", "mrp", "pricing",
+  "kitna", "kya", "hai", "ka", "ki", "ke", "mein", "ko",
+  "give", "me", "tell", "show", "get", "please",
+  "discount", "discounted", "total", "per", "unit", "each",
+]);
+
+function extractProductMentions(message: string): string[] {
+  const lower = message.toLowerCase();
+
+  const exactMatches: string[] = [];
+  for (const name of ALL_PRODUCT_NAMES) {
+    if (lower.includes(name.toLowerCase())) {
+      exactMatches.push(name);
+    }
+  }
+  if (exactMatches.length > 0) return exactMatches;
+
+  const cleaned = message
+    .replace(/[?!.,;:₹%]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const words = cleaned.split(" ").filter((w) => !FILLER_WORDS.has(w.toLowerCase()) && w.length > 1);
+  if (words.length === 0) return [];
+
+  const candidate = words.join(" ");
+  return [candidate];
+}
+
+type FuzzyMatchResult = {
+  mentioned: string;
+  bestMatch: string;
+  score: number;
+  gsp?: number;
+};
+
+const FUZZY_CLOSE_THRESHOLD = 0.25;
+const FUZZY_UNCERTAIN_THRESHOLD = 0.45;
+
+function fuzzyMatchProducts(mentions: string[]): FuzzyMatchResult[] {
+  const results: FuzzyMatchResult[] = [];
+
+  for (const mentioned of mentions) {
+    const hits = productFuse.search(mentioned);
+    if (hits.length === 0) {
+      results.push({ mentioned, bestMatch: "", score: 1 });
+      continue;
+    }
+
+    const best = hits[0];
+    const bestName = best.item.name;
+    const score = best.score ?? 1;
+
+    const catalogEntry = CATALOG_PRODUCTS.find(
+      (p) => p.name.toLowerCase() === bestName.toLowerCase()
+    );
+
+    results.push({
+      mentioned,
+      bestMatch: bestName,
+      score,
+      gsp: catalogEntry?.gsp,
+    });
+  }
+
+  return results;
+}
+
+function buildClarificationResponse(results: FuzzyMatchResult[]): string | null {
+  const uncertain = results.filter(
+    (r) => r.score > FUZZY_CLOSE_THRESHOLD && r.score <= FUZZY_UNCERTAIN_THRESHOLD
+  );
+  const noMatch = results.filter((r) => r.score > FUZZY_UNCERTAIN_THRESHOLD);
+
+  if (uncertain.length === 0 && noMatch.length === 0) return null;
+
+  const lines: string[] = [];
+
+  for (const r of noMatch) {
+    const suggestions = productFuse
+      .search(r.mentioned)
+      .slice(0, 3)
+      .map((h) => h.item.name);
+    if (suggestions.length > 0) {
+      lines.push(
+        `I don't have a product called **"${r.mentioned}"**. Did you mean one of these?\n` +
+        suggestions.map((s) => `  - ${s}`).join("\n")
+      );
+    } else {
+      lines.push(
+        `I don't have a product called **"${r.mentioned}"** in the Galaxy catalog. ` +
+        `Could you double-check the product name?`
+      );
+    }
+  }
+
+  for (const r of uncertain) {
+    lines.push(
+      `Did you mean **"${r.bestMatch}"** when you said "${r.mentioned}"? ` +
+      `Please confirm so I can give you the correct price.`
+    );
+  }
+
+  return lines.join("\n\n");
+}
+
+function normalizeProductNamesInMessage(
+  message: string,
+  results: FuzzyMatchResult[]
+): string {
+  let normalized = message;
+  for (const r of results) {
+    if (r.score <= FUZZY_CLOSE_THRESHOLD && r.bestMatch) {
+      const re = new RegExp(r.mentioned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      normalized = normalized.replace(re, r.bestMatch);
+    }
+  }
+  return normalized;
 }
 
 // ── Query type detection ───────────────────────────────────────────────────
@@ -660,10 +832,9 @@ async function findNamedLeadInMessage(message: string): Promise<LeadData | null>
 }
 
 async function fetchAllInventorySheets(): Promise<InventorySheetData[]> {
-  const snapshot = await getDocs(query(collection(db, "inventorySheets"), orderBy("createdAt", "desc")));
-  const docs = snapshot.docs as Array<{ id: string; data: () => Record<string, unknown> }>;
+  const snapshot = await adminDb.collection("inventorySheets").orderBy("createdAt", "desc").get();
   const sheets: InventorySheetData[] = [];
-  for (const doc of docs) {
+  for (const doc of snapshot.docs) {
     const normalized = normalizeSheetFromFirestore(doc.id, doc.data());
     sheets.push(normalized as unknown as InventorySheetData);
   }
@@ -727,7 +898,7 @@ async function findNamedInventorySheetInMessage(message: string): Promise<Invent
 }
 
 async function findBestProjectMatch(message: string): Promise<ProjectData | null> {
-  const snapshot = await getDocs(query(collection(db, "projects"), orderBy("updatedAt", "desc")));
+  const snapshot = await adminDb.collection("projects").orderBy("updatedAt", "desc").get();
   if (snapshot.empty) return null;
 
   const lowerMessage = message.toLowerCase();
@@ -762,7 +933,7 @@ async function findBestProjectMatch(message: string): Promise<ProjectData | null
 }
 
 async function findNamedProjectInMessage(message: string): Promise<ProjectData | null> {
-  const snapshot = await getDocs(query(collection(db, "projects"), orderBy("updatedAt", "desc")));
+  const snapshot = await adminDb.collection("projects").orderBy("updatedAt", "desc").get();
   if (snapshot.empty) return null;
 
   const lowerMessage = message.toLowerCase();
@@ -804,7 +975,7 @@ function formatAuditResults(logs: any[], limit = 8): string {
 
 async function fetchAllProjectsContext(message: string): Promise<string> {
   try {
-    const snapshot = await getDocs(query(collection(db, "projects"), orderBy("updatedAt", "desc")));
+    const snapshot = await adminDb.collection("projects").orderBy("updatedAt", "desc").get();
     if (snapshot.empty) return "No projects found.";
 
     const lowerMessage = message.toLowerCase();
@@ -915,6 +1086,51 @@ async function fetchAllLeadsContext(message: string): Promise<string> {
   }
 }
 
+// ── Admin audit log fetcher ───────────────────────────────────────────
+
+async function fetchAuditLogsAdmin(): Promise<any[]> {
+  try {
+    const projectsSnapshot = await adminDb.collection("projects").get();
+    const projectsMap: Record<string, string> = {};
+    projectsSnapshot.docs.forEach((doc) => {
+      projectsMap[doc.id] = (doc.data().name as string) ?? "Unknown Project";
+    });
+
+    const allLogsPromises = projectsSnapshot.docs.map(async (projectDoc) => {
+      const logsSnapshot = await adminDb
+        .collection("projects")
+        .doc(projectDoc.id)
+        .collection("audit_logs")
+        .orderBy("timestamp", "desc")
+        .limit(50)
+        .get();
+
+      return logsSnapshot.docs.map((logDoc) => {
+        const data = logDoc.data();
+        const ts = data.timestamp;
+        const timestamp = ts?.toDate ? ts.toDate() : new Date(String(ts ?? ""));
+        return {
+          id: logDoc.id,
+          projectId: projectDoc.id,
+          projectName: projectsMap[projectDoc.id] || "Unknown Project",
+          timestamp,
+          actionType: String(data.actionType ?? "unknown"),
+          description: String(data.description ?? ""),
+          userName: String(data.userName ?? data.userEmail ?? "Unknown User"),
+        };
+      });
+    });
+
+    const nestedLogs = await Promise.all(allLogsPromises);
+    return nestedLogs
+      .flat()
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 150);
+  } catch {
+    return [];
+  }
+}
+
 // ── LLM generators ────────────────────────────────────────────────────────
 
 type HistoryEntry = { role: "user" | "bot"; content: string };
@@ -1006,6 +1222,24 @@ export async function POST(req: NextRequest) {
     }
 
     let answeredBy: "gemini" | "ollama" = model === "ollama" ? "ollama" : "gemini";
+    let normalizedMessage = message;
+
+    // 0. Fuzzy product-name matching — intercept price queries with unrecognized products
+    if (isPriceQuery(message)) {
+      const mentions = extractProductMentions(message);
+      if (mentions.length > 0) {
+        const matchResults = fuzzyMatchProducts(mentions);
+        const clarification = buildClarificationResponse(matchResults);
+        if (clarification) {
+          return NextResponse.json({
+            answer: clarification,
+            source: "Product Catalog Lookup",
+            answeredBy,
+          });
+        }
+        normalizedMessage = normalizeProductNamesInMessage(message, matchResults);
+      }
+    }
 
     // 1. Named-project first-pass — skip if user is asking about quotations
     if (!isQuotationRelated(message)) {
@@ -1053,7 +1287,7 @@ export async function POST(req: NextRequest) {
     // 2. Recent sent-items query
     if (isRecentSentQuery(message)) {
       try {
-        const logs = await fetchAuditLogs();
+        const logs = await fetchAuditLogsAdmin();
         return NextResponse.json({
           answer: `## Recent Items Sent to Clients\n\n${formatAuditResults(logs, 10)}`,
           source: "Audit Logs",
@@ -1193,15 +1427,15 @@ ${dynamicContext ? `\n---\nLIVE DATA:\n${dynamicContext}` : ""}`;
     let answer: string;
     if (model === "ollama") {
       try {
-        answer = await generateWithOllama(message, systemPrompt, history);
+        answer = await generateWithOllama(normalizedMessage, systemPrompt, history);
       } catch (ollamaErr) {
         console.error("Ollama failed, falling back to Gemini:", ollamaErr);
-        answer = await generateWithGemini(message, systemPrompt, history);
+        answer = await generateWithGemini(normalizedMessage, systemPrompt, history);
         answeredBy = "gemini";
         source += " (Ollama unavailable, used Gemini)";
       }
     } else {
-      answer = await generateWithGemini(message, systemPrompt, history);
+      answer = await generateWithGemini(normalizedMessage, systemPrompt, history);
     }
 
     return NextResponse.json({ answer, source, answeredBy });
