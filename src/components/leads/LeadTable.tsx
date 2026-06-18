@@ -9,6 +9,21 @@ interface LeadTableProps {
   leads: Lead[]
   onEdit: (lead: Lead) => void
   onDelete: (lead: Lead) => void
+  canDelete?: boolean
+}
+
+function PriorityBadge({ priority }: { priority?: string }) {
+  if (!priority) return <span className="text-zinc-400 dark:text-zinc-600 text-xs">—</span>
+  const cls: Record<string, string> = {
+    High: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    Low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  }
+  return (
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${cls[priority] ?? 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+      {priority}
+    </span>
+  )
 }
 
 function formatDate(dateStr?: string) {
@@ -18,7 +33,7 @@ function formatDate(dateStr?: string) {
 
 const today = new Date().toISOString().split('T')[0]
 
-export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
+export function LeadTable({ leads, onEdit, onDelete, canDelete = true }: LeadTableProps) {
   if (leads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-zinc-400 dark:text-zinc-500">
@@ -49,7 +64,10 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                     {lead.propertyType} · {lead.city}
                   </p>
                 </div>
-                <StatusBadge status={lead.status} />
+                <div className="flex flex-col items-end gap-1">
+                  <StatusBadge status={lead.status} />
+                  <PriorityBadge priority={lead.priority} />
+                </div>
               </div>
 
               <div className="mt-3 flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
@@ -76,9 +94,11 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                 <button onClick={() => onEdit(lead)} className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-700 py-1.5 text-xs text-zinc-600 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors">
                   Edit
                 </button>
-                <button onClick={() => onDelete(lead)} className="rounded-lg border border-red-900/40 px-3 py-1.5 text-xs text-red-400 hover:border-red-700 transition-colors">
-                  Del
-                </button>
+                {canDelete && (
+                  <button onClick={() => onDelete(lead)} className="rounded-lg border border-red-900/40 px-3 py-1.5 text-xs text-red-400 hover:border-red-700 transition-colors">
+                    Del
+                  </button>
+                )}
               </div>
             </div>
           )
@@ -95,6 +115,7 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
               <th className="pb-3 pr-4 font-medium">City</th>
               <th className="pb-3 pr-4 font-medium">Source</th>
               <th className="pb-3 pr-4 font-medium">Status</th>
+              <th className="pb-3 pr-4 font-medium">Priority</th>
               <th className="pb-3 pr-4 font-medium">Next Follow-up</th>
               <th className="pb-3 pr-4 font-medium">Assigned To</th>
               <th className="pb-3 font-medium">Actions</th>
@@ -119,6 +140,7 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                   <td className="py-3 pr-4 text-zinc-500 dark:text-zinc-400">{lead.city}</td>
                   <td className="py-3 pr-4 text-zinc-500 dark:text-zinc-400">{lead.source}</td>
                   <td className="py-3 pr-4"><StatusBadge status={lead.status} /></td>
+                  <td className="py-3 pr-4"><PriorityBadge priority={lead.priority} /></td>
                   <td className="py-3 pr-4">
                     {lead.nextFollowUpDate ? (
                       <span className={`text-xs font-medium ${isOverdue ? 'text-red-400' : isToday ? 'text-orange-400' : 'text-zinc-400'}`}>
@@ -133,7 +155,7 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">View</Button>
                       </Link>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onEdit(lead)}>Edit</Button>
-                      <Button variant="danger" size="sm" className="h-7 px-2 text-xs" onClick={() => onDelete(lead)}>Del</Button>
+                      {canDelete && <Button variant="danger" size="sm" className="h-7 px-2 text-xs" onClick={() => onDelete(lead)}>Del</Button>}
                     </div>
                   </td>
                 </tr>

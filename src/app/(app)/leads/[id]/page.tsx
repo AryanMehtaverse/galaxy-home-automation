@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { Lead, CallLog } from '@/types/lead'
+import type { Lead, CallLog, LeadStatus } from '@/types/lead'
 import { fetchLeads, updateLead, fetchCallLogs, createCallLog } from '@/lib/leadsService'
 import { SAMPLE_LEADS, SAMPLE_CALL_LOGS } from '@/data/sampleLeads'
 import { StatusBadge, OutcomeBadge, PriorityBadge } from '@/components/leads/StatusBadge'
@@ -30,6 +30,8 @@ export default function LeadDetailPage() {
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
+  const [statusSaving, setStatusSaving] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -85,6 +87,25 @@ export default function LeadDetailPage() {
     setLead((p) => p ? { ...p, ...updates } : p)
   }
 
+  const ALL_STATUSES: LeadStatus[] = ['New Lead', 'Contacted', 'Interested', 'Call Back Later', 'Site Visit Required', 'Quotation Requested', 'Negotiation', 'Won', 'Lost', 'Not Interested']
+
+  async function handleStatusChange(newStatus: LeadStatus) {
+    if (!lead || newStatus === lead.status) return
+    const prevStatus = lead.status
+    setLead((p) => p ? { ...p, status: newStatus } : p)
+    setStatusSaving(true)
+    try {
+      await updateLead(lead.id, { status: newStatus, updatedAt: new Date().toISOString().split('T')[0] })
+      setToast({ message: `Status updated to "${newStatus}"`, type: 'success' })
+    } catch {
+      setLead((p) => p ? { ...p, status: prevStatus } : p)
+      setToast({ message: 'Failed to update status', type: 'error' })
+    } finally {
+      setStatusSaving(false)
+      setTimeout(() => setToast(null), 2500)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
@@ -125,6 +146,14 @@ export default function LeadDetailPage() {
                   <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{lead.name}</h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusBadge status={lead.status} />
+                    <select
+                      value={lead.status}
+                      onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
+                      disabled={statusSaving}
+                      className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-1 text-xs text-zinc-700 dark:text-zinc-300 focus:border-[#C9A840] focus:outline-none focus:ring-1 focus:ring-[#C9A840] disabled:opacity-50"
+                    >
+                      {ALL_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
                     {lead.priority && <PriorityBadge priority={lead.priority} />}
                   </div>
                 </div>
@@ -299,6 +328,16 @@ export default function LeadDetailPage() {
         leadId={lead.id}
         onSave={handleLogCall}
       />
+
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg transition-all ${
+          toast.type === 'success'
+            ? 'bg-emerald-600 text-white'
+            : 'bg-red-600 text-white'
+        }`}>
+          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
+        </div>
+      )}
     </div>
   )
 }

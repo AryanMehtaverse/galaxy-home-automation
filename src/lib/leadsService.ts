@@ -1,4 +1,5 @@
 import type { Lead, CallLog } from '@/types/lead'
+import { auth } from '@/lib/firebase'
 
 const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
 
@@ -35,7 +36,13 @@ export async function updateLead(id: string, updates: Partial<Lead>): Promise<vo
 }
 
 export async function deleteLead(id: string): Promise<void> {
-  const res = await fetch(dbUrl(`/leads/${id}.json`), { method: 'DELETE' })
+  const token = await auth.currentUser?.getIdToken()
+  if (!token) throw new Error('Not authenticated')
+  const res = await fetch(`/api/leads/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (res.status === 403) throw new Error('Permission denied: admin or owner role required')
   if (!res.ok) throw new Error('Failed to delete lead')
 }
 

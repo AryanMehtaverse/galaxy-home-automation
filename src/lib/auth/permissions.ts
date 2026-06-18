@@ -143,6 +143,11 @@ export function canPermanentlyDeleteProject(user: AppUser | null | undefined): b
   return user.role === "admin" || user.role === "owner";
 }
 
+export function canDeleteLead(user: AppUser | null | undefined): boolean {
+  if (!user || user.active === false) return false;
+  return user.role === "admin" || user.role === "owner";
+}
+
 export function canViewProjectAlert(user: AppUser | null | undefined, project: Project): boolean {
   if (!user || user.active === false) return false;
   if (user.role === "admin" || user.role === "owner") return true;
