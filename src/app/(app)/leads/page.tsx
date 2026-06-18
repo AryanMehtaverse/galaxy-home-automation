@@ -26,6 +26,7 @@ export default function LeadsPage() {
   const [filterCity, setFilterCity] = useState('')
   const [filterSource, setFilterSource] = useState('')
   const [filterAssignee, setFilterAssignee] = useState('')
+  const [filterLeadType, setFilterLeadType] = useState('')
   const [page, setPage] = useState(1)
   const [addOpen, setAddOpen] = useState(false)
   const [editLead, setEditLead] = useState<Lead | null>(null)
@@ -52,6 +53,7 @@ export default function LeadsPage() {
     if (filterCity && l.city !== filterCity) return false
     if (filterSource && l.source !== filterSource) return false
     if (filterAssignee && l.assignedTo !== filterAssignee) return false
+    if (filterLeadType && l.leadType !== filterLeadType) return false
     return true
   })
 
@@ -136,11 +138,16 @@ export default function LeadsPage() {
               <option value="">All Employees</option>
               {assignees.map((a) => <option key={a}>{a}</option>)}
             </select>
+            <select className={`${selectCls} flex-1 min-w-[90px]`} value={filterLeadType} onChange={(e) => { setFilterLeadType(e.target.value); setPage(1) }}>
+              <option value="">All Types</option>
+              <option value="B2B">B2B</option>
+              <option value="B2C">B2C</option>
+            </select>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
-            {(search || filterStatus || filterCity || filterSource || filterAssignee) && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setPage(1) }}>
+            {(search || filterStatus || filterCity || filterSource || filterAssignee || filterLeadType) && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setFilterLeadType(''); setPage(1) }}>
                 Clear Filters
               </Button>
             )}
