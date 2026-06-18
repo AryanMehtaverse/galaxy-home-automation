@@ -22,7 +22,12 @@ export type LeadSource =
   | 'Cold Calling'
   | 'Walk In'
   | 'Manual Entry'
+  | 'Instagram'
+  | 'Facebook'
+  | 'LinkedIn'
   | 'Other'
+
+export type LeadType = 'B2B' | 'B2C'
 
 export type PropertyType =
   | '1 BHK'
@@ -55,6 +60,7 @@ export interface Lead {
   city: string
   address?: string
   source: LeadSource
+  leadType?: LeadType
   propertyType: PropertyType
   budget?: string
   assignedTo?: string

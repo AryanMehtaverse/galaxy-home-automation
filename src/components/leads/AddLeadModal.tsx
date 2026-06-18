@@ -3,9 +3,9 @@
 import { useState, type FormEvent } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import type { Lead, LeadSource, LeadStatus, PropertyType, Priority } from '@/types/lead'
+import type { Lead, LeadSource, LeadStatus, LeadType, PropertyType, Priority } from '@/types/lead'
 
-const SOURCES: LeadSource[] = ['IndiaMART', 'Meta Ads', 'Google Ads', 'Website', 'Referral', 'Architect', 'Builder', 'JustDial', 'Cold Calling', 'Walk In', 'Manual Entry', 'Other']
+const SOURCES: LeadSource[] = ['IndiaMART', 'Meta Ads', 'Google Ads', 'Website', 'Referral', 'Architect', 'Builder', 'JustDial', 'Cold Calling', 'Walk In', 'Manual Entry', 'Instagram', 'Facebook', 'LinkedIn', 'Other']
 const STATUSES: LeadStatus[] = ['New Lead', 'Contacted', 'Interested', 'Call Back Later', 'Site Visit Required', 'Quotation Requested', 'Negotiation', 'Won', 'Lost', 'Not Interested']
 const PROPERTY_TYPES: PropertyType[] = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', 'Villa', 'Office', 'Commercial', 'Other']
 const PRIORITIES: Priority[] = ['High', 'Medium', 'Low']
@@ -39,6 +39,7 @@ export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalPro
     city: initial?.city ?? '',
     address: initial?.address ?? '',
     source: initial?.source ?? ('IndiaMART' as LeadSource),
+    leadType: initial?.leadType ?? ('B2C' as LeadType),
     propertyType: initial?.propertyType ?? ('3 BHK' as PropertyType),
     budget: initial?.budget ?? '',
     assignedTo: initial?.assignedTo ?? '',
@@ -65,8 +66,9 @@ export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalPro
         city: form.city.trim(),
         address: form.address.trim() || undefined,
         source: form.source,
-        propertyType: form.propertyType,
-        budget: form.budget.trim() || undefined,
+        leadType: form.leadType,
+        propertyType: form.leadType === 'B2C' ? form.propertyType : ('Other' as PropertyType),
+        budget: form.leadType === 'B2C' ? (form.budget.trim() || undefined) : undefined,
         assignedTo: form.assignedTo.trim() || undefined,
         notes: form.notes.trim() || undefined,
         status: form.status,
@@ -121,14 +123,35 @@ export function AddLeadModal({ open, onClose, onSave, initial }: AddLeadModalPro
             {SOURCES.map((s) => <option key={s}>{s}</option>)}
           </select>
         </Field>
-        <Field label="Property Type">
-          <select className={inputCls} value={form.propertyType} onChange={(e) => set('propertyType', e.target.value)}>
-            {PROPERTY_TYPES.map((p) => <option key={p}>{p}</option>)}
-          </select>
+        <Field label="Lead Type">
+          <div className="flex gap-4 py-2">
+            {(['B2C', 'B2B'] as LeadType[]).map((t) => (
+              <label key={t} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="leadType"
+                  value={t}
+                  checked={form.leadType === t}
+                  onChange={() => set('leadType', t)}
+                  className="accent-[#C9A840]"
+                />
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">{t}</span>
+              </label>
+            ))}
+          </div>
         </Field>
-        <Field label="Budget">
-          <input className={inputCls} value={form.budget} onChange={(e) => set('budget', e.target.value)} placeholder="₹2-3 Lakh" />
-        </Field>
+        {form.leadType === 'B2C' && (
+          <>
+            <Field label="Property Type">
+              <select className={inputCls} value={form.propertyType} onChange={(e) => set('propertyType', e.target.value)}>
+                {PROPERTY_TYPES.map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </Field>
+            <Field label="Budget">
+              <input className={inputCls} value={form.budget} onChange={(e) => set('budget', e.target.value)} placeholder="₹2-3 Lakh" />
+            </Field>
+          </>
+        )}
         <Field label="Status">
           <select className={inputCls} value={form.status} onChange={(e) => set('status', e.target.value)}>
             {STATUSES.map((s) => <option key={s}>{s}</option>)}

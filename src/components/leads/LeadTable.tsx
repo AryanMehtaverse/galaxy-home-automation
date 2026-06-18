@@ -44,7 +44,10 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                   <Link href={`/leads/${lead.id}`} className="font-semibold text-zinc-900 dark:text-zinc-100 hover:text-[#C9A840] transition-colors">
                     {lead.name}
                   </Link>
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{lead.propertyType} · {lead.city}</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                    {lead.leadType && <span className="inline-block mr-1.5 rounded bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{lead.leadType}</span>}
+                    {lead.propertyType} · {lead.city}
+                  </p>
                 </div>
                 <StatusBadge status={lead.status} />
               </div>
@@ -107,7 +110,10 @@ export function LeadTable({ leads, onEdit, onDelete }: LeadTableProps) {
                     <Link href={`/leads/${lead.id}`} className="font-medium text-zinc-900 dark:text-zinc-100 hover:text-[#C9A840] transition-colors">
                       {lead.name}
                     </Link>
-                    <p className="text-xs text-zinc-400 dark:text-zinc-500">{lead.propertyType}</p>
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                      {lead.leadType && <span className="inline-block mr-1.5 rounded bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">{lead.leadType}</span>}
+                      {lead.propertyType}
+                    </p>
                   </td>
                   <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300 font-mono text-xs">{lead.phone}</td>
                   <td className="py-3 pr-4 text-zinc-500 dark:text-zinc-400">{lead.city}</td>
