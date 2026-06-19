@@ -27,6 +27,7 @@ export default function LeadsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterDateCard, setFilterDateCard] = useState<'' | 'today' | 'overdue'>('')
   const [filterCity, setFilterCity] = useState('')
   const [filterSource, setFilterSource] = useState('')
   const [filterAssignee, setFilterAssignee] = useState('')
@@ -53,11 +54,14 @@ export default function LeadsPage() {
 
   const isPrioritySort = filterPriority === 'high-to-low' || filterPriority === 'low-to-high'
   const priorityFilterValue = isPrioritySort ? '' : filterPriority
+  const today = new Date().toISOString().split('T')[0]
 
   const filtered = leads.filter((l) => {
     const q = search.toLowerCase()
     if (q && !l.name.toLowerCase().includes(q) && !l.phone.includes(q) && !l.city.toLowerCase().includes(q)) return false
     if (filterStatus && l.status !== filterStatus) return false
+    if (filterDateCard === 'today' && l.nextFollowUpDate !== today) return false
+    if (filterDateCard === 'overdue' && !(l.nextFollowUpDate && l.nextFollowUpDate < today)) return false
     if (filterCity && l.city !== filterCity) return false
     if (filterSource && l.source !== filterSource) return false
     if (filterAssignee && l.assignedTo !== filterAssignee) return false
@@ -128,7 +132,15 @@ export default function LeadsPage() {
         </div>
 
         {/* Summary Cards */}
-        {!loading && <SummaryCards leads={leads} />}
+        {!loading && (
+          <SummaryCards
+            leads={leads}
+            activeStatus={filterStatus}
+            activeDateFilter={filterDateCard}
+            onStatusClick={(s) => { setFilterStatus(s); setFilterDateCard(''); setPage(1) }}
+            onDateClick={(d) => { setFilterDateCard(d as '' | 'today' | 'overdue'); setFilterStatus(''); setPage(1) }}
+          />
+        )}
 
         {/* Filters */}
         <div className="space-y-2">
@@ -139,7 +151,7 @@ export default function LeadsPage() {
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
           />
           <div className="flex flex-wrap gap-2">
-            <select className={`${selectCls} flex-1 min-w-[130px]`} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}>
+            <select className={`${selectCls} flex-1 min-w-[130px]`} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setFilterDateCard(''); setPage(1) }}>
               <option value="">All Statuses</option>
               {ALL_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
@@ -170,8 +182,8 @@ export default function LeadsPage() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-zinc-500 dark:text-zinc-500">{filtered.length} lead{filtered.length !== 1 ? 's' : ''}</span>
-            {(search || filterStatus || filterCity || filterSource || filterAssignee || filterLeadType || filterPriority) && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setFilterLeadType(''); setFilterPriority(''); setPage(1) }}>
+            {(search || filterStatus || filterDateCard || filterCity || filterSource || filterAssignee || filterLeadType || filterPriority) && (
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterDateCard(''); setFilterCity(''); setFilterSource(''); setFilterAssignee(''); setFilterLeadType(''); setFilterPriority(''); setPage(1) }}>
                 Clear Filters
               </Button>
             )}
