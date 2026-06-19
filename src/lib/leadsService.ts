@@ -69,3 +69,14 @@ export async function createCallLog(data: Omit<CallLog, 'id'>): Promise<CallLog>
   const { name: id } = await res.json()
   return { ...data, id }
 }
+
+export async function deleteCallLog(id: string): Promise<void> {
+  const token = await auth.currentUser?.getIdToken()
+  if (!token) throw new Error('Not authenticated')
+  const res = await fetch(`/api/call-logs/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (res.status === 403) throw new Error('Permission denied')
+  if (!res.ok) throw new Error('Failed to delete call log')
+}

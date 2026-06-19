@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Lead, CallLog, LeadStatus } from '@/types/lead'
-import { fetchLeads, updateLead, fetchCallLogs, createCallLog } from '@/lib/leadsService'
+import { fetchLeads, updateLead, fetchCallLogs, createCallLog, deleteCallLog } from '@/lib/leadsService'
+import { useAuthContext } from '@/components/providers/AuthProvider'
+import { canDeleteCallLog } from '@/lib/auth/permissions'
 import { SAMPLE_LEADS, SAMPLE_CALL_LOGS } from '@/data/sampleLeads'
 import { StatusBadge, OutcomeBadge, PriorityBadge } from '@/components/leads/StatusBadge'
 import { AddLeadModal } from '@/components/leads/AddLeadModal'
@@ -25,12 +27,14 @@ function formatDateTime(date: string, time?: string) {
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuthContext()
   const [lead, setLead] = useState<Lead | null>(null)
   const [callLogs, setCallLogs] = useState<CallLog[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
   const [statusSaving, setStatusSaving] = useState(false)
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const load = useCallback(async () => {
@@ -85,6 +89,22 @@ export default function LeadDetailPage() {
     }
     await updateLead(lead.id, updates)
     setLead((p) => p ? { ...p, ...updates } : p)
+  }
+
+  async function handleDeleteCallLog(logId: string) {
+    if (!confirm('Delete this call log entry? This cannot be undone.')) return
+    setDeletingLogId(logId)
+    try {
+      await deleteCallLog(logId)
+      setCallLogs((p) => p.filter((l) => l.id !== logId))
+      setToast({ message: 'Call log deleted', type: 'success' })
+      setTimeout(() => setToast(null), 2500)
+    } catch (e) {
+      setToast({ message: String(e), type: 'error' })
+      setTimeout(() => setToast(null), 3000)
+    } finally {
+      setDeletingLogId(null)
+    }
   }
 
   const ALL_STATUSES: LeadStatus[] = ['New Lead', 'Contacted', 'Interested', 'Call Back Later', 'Site Visit Required', 'Quotation Requested', 'Negotiation', 'Won', 'Lost', 'Not Interested']
@@ -221,6 +241,25 @@ export default function LeadDetailPage() {
                               <OutcomeBadge outcome={log.outcome} />
                               {log.priority && <PriorityBadge priority={log.priority} />}
                             </div>
+                            {canDeleteCallLog(user) && (
+                              <button
+                                onClick={() => handleDeleteCallLog(log.id)}
+                                disabled={deletingLogId === log.id}
+                                title="Delete call log"
+                                className="ml-auto flex-shrink-0 rounded-md p-1.5 text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {deletingLogId === log.id ? (
+                                  <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                )}
+                              </button>
+                            )}
                           </div>
                           {log.notes && <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">{log.notes}</p>}
                           {log.nextFollowUpDate && (
