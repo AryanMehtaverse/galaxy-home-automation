@@ -6,32 +6,25 @@ import { createPortal } from "react-dom";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { useInventorySheets } from "@/hooks/useInventorySheets";
 import {
-  addInventorySheet,
-  updateInventorySheet,
-  deleteInventorySheet,
-  checkSpreadsheetIdExists,
-} from "@/lib/firestore/inventory";
-import {
   canAddInventorySheet,
   canEditInventorySheet,
   canDeleteInventorySheet,
   canOpenInventorySheet,
 } from "@/lib/auth/permissions";
-import { parseGoogleSheetsUrl } from "@/lib/utils/sheets";
 import { formatAlertDate } from "@/lib/utils/dates";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type { InventorySheet, AppUser } from "@/types";
+import { AddSheetModal } from "@/components/inventory/AddSheetModal";
+import { EditSheetModal } from "@/components/inventory/EditSheetModal";
+import { DeleteSheetModal } from "@/components/inventory/DeleteSheetModal";
+import type { InventorySheet } from "@/types";
 
 export default function InventoryPage() {
   const { user } = useAuthContext();
   const { sheets, loading } = useInventorySheets();
   const router = useRouter();
 
-  // Dialog & Modal States
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingSheet, setEditingSheet] = useState<InventorySheet | null>(null);
   const [deletingSheet, setDeletingSheet] = useState<InventorySheet | null>(null);
@@ -66,12 +59,11 @@ export default function InventoryPage() {
       setActiveDropdownId(sheetId);
       setDropdownPosition({
         top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 128, // aligns the right side of the 128px dropdown with the trigger
+        left: rect.right + window.scrollX - 128,
       });
     }
   };
 
-  // Permission Checks
   const allowedToAdd = canAddInventorySheet(user);
   const allowedToEdit = canEditInventorySheet(user);
   const allowedToDelete = canDeleteInventorySheet(user);
@@ -171,9 +163,7 @@ export default function InventoryPage() {
                           href={sheet.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center justify-center rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-605 transition-colors"
                           title="Open in new tab"
                         >
@@ -207,10 +197,9 @@ export default function InventoryPage() {
             </table>
           </div>
 
-          {/* Render absolute floating dropdown overlay in a React Portal to prevent clipping */}
+          {/* Floating dropdown via portal to prevent clipping */}
           {activeDropdownId && dropdownPosition && typeof document !== "undefined" && createPortal(
             <>
-              {/* Fullscreen backdrop overlay for closing dropdown */}
               <div
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={(e) => {
@@ -267,280 +256,15 @@ export default function InventoryPage() {
         </>
       )}
 
-      {/* Add Sheet Modal */}
       {isAddOpen && user && (
-        <AddSheetModal
-          open={isAddOpen}
-          onClose={() => setIsAddOpen(false)}
-          user={user}
-        />
+        <AddSheetModal open={isAddOpen} onClose={() => setIsAddOpen(false)} user={user} />
       )}
-
-      {/* Edit Sheet Modal */}
       {editingSheet && (
-        <EditSheetModal
-          open={!!editingSheet}
-          onClose={() => setEditingSheet(null)}
-          sheet={editingSheet}
-        />
+        <EditSheetModal open={!!editingSheet} onClose={() => setEditingSheet(null)} sheet={editingSheet} />
       )}
-
-      {/* Delete Confirmation Modal */}
       {deletingSheet && (
-        <DeleteSheetModal
-          open={!!deletingSheet}
-          onClose={() => setDeletingSheet(null)}
-          sheet={deletingSheet}
-        />
+        <DeleteSheetModal open={!!deletingSheet} onClose={() => setDeletingSheet(null)} sheet={deletingSheet} />
       )}
     </div>
-  );
-}
-
-// ----------------------------------------------------------------------------
-// MODAL COMPONENTS
-// ----------------------------------------------------------------------------
-
-interface AddSheetModalProps {
-  open: boolean;
-  onClose: () => void;
-  user: AppUser;
-}
-
-function AddSheetModal({ open, onClose, user }: AddSheetModalProps) {
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !url.trim()) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const parsed = parseGoogleSheetsUrl(url);
-      if (!parsed) {
-        setError("Invalid Google Sheets URL. Please enter a valid URL in the format: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/...");
-        setLoading(false);
-        return;
-      }
-
-      // Check if duplicate spreadsheet ID exists
-      const duplicateExists = await checkSpreadsheetIdExists(parsed.spreadsheetId);
-      if (duplicateExists) {
-        setError("An inventory sheet with this Spreadsheet ID has already been added.");
-        setLoading(false);
-        return;
-      }
-
-      // Add to Firestore
-      await addInventorySheet(
-        {
-          name: name.trim(),
-          originalUrl: url.trim(),
-          spreadsheetId: parsed.spreadsheetId,
-          embedUrl: parsed.embedUrl,
-        },
-        user
-      );
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError("An error occurred while adding the inventory sheet. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Add Inventory Sheet"
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Adding..." : "Add Sheet"}
-          </Button>
-        </>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Sheet Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Electrical Inventory"
-          required
-          disabled={loading}
-        />
-
-        <Input
-          label="Google Sheet URL"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="e.g. https://docs.google.com/spreadsheets/d/..."
-          required
-          disabled={loading}
-        />
-
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-      </form>
-    </Modal>
-  );
-}
-
-interface EditSheetModalProps {
-  open: boolean;
-  onClose: () => void;
-  sheet: InventorySheet;
-}
-
-function EditSheetModal({ open, onClose, sheet }: EditSheetModalProps) {
-  const [name, setName] = useState(sheet.name);
-  const [url, setUrl] = useState(sheet.originalUrl);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !url.trim()) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const parsed = parseGoogleSheetsUrl(url);
-      if (!parsed) {
-        setError("Invalid Google Sheets URL. Please enter a valid URL in the format: https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/...");
-        setLoading(false);
-        return;
-      }
-
-      // Check if duplicate spreadsheet ID exists on another sheet
-      const duplicateExists = await checkSpreadsheetIdExists(parsed.spreadsheetId, sheet.id);
-      if (duplicateExists) {
-        setError("Another inventory sheet with this Spreadsheet ID has already been added.");
-        setLoading(false);
-        return;
-      }
-
-      // Update in Firestore
-      await updateInventorySheet(sheet.id, {
-        name: name.trim(),
-        originalUrl: url.trim(),
-        spreadsheetId: parsed.spreadsheetId,
-        embedUrl: parsed.embedUrl,
-      });
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError("An error occurred while updating the inventory sheet. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Edit Inventory Sheet"
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Sheet Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Electrical Inventory"
-          required
-          disabled={loading}
-        />
-
-        <Input
-          label="Google Sheet URL"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="e.g. https://docs.google.com/spreadsheets/d/..."
-          required
-          disabled={loading}
-        />
-
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-      </form>
-    </Modal>
-  );
-}
-
-interface DeleteSheetModalProps {
-  open: boolean;
-  onClose: () => void;
-  sheet: InventorySheet;
-}
-
-function DeleteSheetModal({ open, onClose, sheet }: DeleteSheetModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleDelete = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      await deleteInventorySheet(sheet.id);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError("Failed to delete sheet. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Delete Inventory Sheet?"
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete} disabled={loading}>
-            {loading ? "Deleting..." : "Delete Sheet"}
-          </Button>
-        </>
-      }
-    >
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Are you sure you want to delete <span className="font-semibold text-zinc-900 dark:text-zinc-100">{sheet.name}</span>?
-        This action will permanently remove the link and embedding from the Project Manager Tool, but will not delete your spreadsheet inside Google Drive.
-      </p>
-      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-    </Modal>
   );
 }
