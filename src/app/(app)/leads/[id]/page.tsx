@@ -12,6 +12,14 @@ import { StatusBadge, OutcomeBadge, PriorityBadge } from '@/components/leads/Sta
 import { AddLeadModal } from '@/components/leads/AddLeadModal'
 import { LogCallModal } from '@/components/leads/LogCallModal'
 import { Button } from '@/components/ui/Button'
+import { getQuotesByLeadId } from '@/lib/firestore/quotesNative'
+import { getAllProductsFromFirestore } from '@/lib/firestore/quotes'
+import { subscribeToProjects } from '@/lib/firestore/projects'
+import { QuoteStatusBadge } from '@/components/quotations/QuoteStatusBadge'
+import { computePricing, formatCurrency } from '@/lib/pricingEngine'
+import type { Quote, CatalogProduct } from '@/types/quote'
+import type { Project } from '@/types'
+import { FilePlus, FolderOpen } from 'lucide-react'
 
 function formatDate(d?: string) {
   if (!d) return '—'
@@ -36,11 +44,19 @@ export default function LeadDetailPage() {
   const [statusSaving, setStatusSaving] = useState(false)
   const [deletingLogId, setDeletingLogId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const [leads, logs] = await Promise.all([fetchLeads(), fetchCallLogs(id)])
+      const [leads, logs, q, p] = await Promise.all([
+        fetchLeads(),
+        fetchCallLogs(id),
+        getQuotesByLeadId(id),
+        getAllProductsFromFirestore(),
+      ])
       let found = leads.find((l) => l.id === id)
       let foundLogs = logs
 
@@ -52,6 +68,8 @@ export default function LeadDetailPage() {
 
       setLead(found ?? null)
       setCallLogs(foundLogs.sort((a, b) => (b.date > a.date ? 1 : -1)))
+      setQuotes(q)
+      setProducts(p as CatalogProduct[])
     } catch {
       // fallback to sample
       const found = SAMPLE_LEADS.find((l) => l.id === id) ?? null
@@ -62,6 +80,15 @@ export default function LeadDetailPage() {
       setLoading(false)
     }
   }, [id])
+
+  // Subscribe to projects linked to this lead
+  useEffect(() => {
+    const unsub = subscribeToProjects((all) => {
+      setProjects(all.filter((p) => (p as unknown as { leadId?: string }).leadId === id || p.clientName === lead?.name))
+    })
+    return unsub
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, lead?.name])
 
   useEffect(() => { load() }, [load])
 
@@ -204,6 +231,92 @@ export default function LeadDetailPage() {
                 <div className="mt-4 rounded-lg bg-zinc-100/60 dark:bg-zinc-800/60 p-3">
                   <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500 uppercase tracking-wider mb-1">Notes</p>
                   <p className="text-sm text-zinc-700 dark:text-zinc-300">{lead.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Quotations */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Quotations</h2>
+                <Link
+                  href={`/quotations/new?leadId=${lead.id}&clientName=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email || '')}&address=${encodeURIComponent(lead.address || '')}`}
+                  className="flex items-center gap-1.5 rounded-lg bg-[#C9A840] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#b8962e] transition-colors"
+                >
+                  <FilePlus className="w-3.5 h-3.5" /> New Quote
+                </Link>
+              </div>
+              {quotes.length === 0 ? (
+                <div className="flex flex-col items-center py-8 text-zinc-400 dark:text-zinc-600">
+                  <p className="text-sm">No quotes yet</p>
+                  <Link
+                    href={`/quotations/new?leadId=${lead.id}&clientName=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone)}`}
+                    className="mt-2 text-xs text-[#C9A840] hover:underline"
+                  >
+                    Create first quote →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {quotes.map((q) => {
+                    let total = 0
+                    try { total = computePricing(q.rooms ?? [], products, q.sectionDiscounts ?? {}).grandSubtotal } catch { total = 0 }
+                    return (
+                      <Link
+                        key={q.id}
+                        href={`/quotations/${q.id}`}
+                        className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/50 px-4 py-3 hover:border-[#C9A840]/50 transition-colors"
+                      >
+                        <div>
+                          <span className="font-mono font-bold text-[#C9A840] text-sm">{q.number}</span>
+                          <p className="text-xs text-zinc-400 mt-0.5">{q.date ? new Date(q.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <QuoteStatusBadge status={q.status} />
+                          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{formatCurrency(total)}</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Projects */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Projects</h2>
+                <Link
+                  href={`/projects/new?clientName=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone)}`}
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:border-[#C9A840] hover:text-[#C9A840] transition-colors"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" /> New Project
+                </Link>
+              </div>
+              {projects.length === 0 ? (
+                <div className="flex flex-col items-center py-8 text-zinc-400 dark:text-zinc-600">
+                  <p className="text-sm">No projects yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {projects.map((proj) => (
+                    <Link
+                      key={proj.id}
+                      href={`/projects/${proj.id}`}
+                      className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/50 px-4 py-3 hover:border-[#C9A840]/50 transition-colors"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{proj.name}</p>
+                        <p className="text-xs text-zinc-400 mt-0.5 capitalize">{proj.status.replace('_', ' ')}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-zinc-400">{proj.progress}% complete</div>
+                        <div className="mt-1 h-1.5 w-20 rounded-full bg-zinc-200 dark:bg-zinc-700">
+                          <div className="h-full rounded-full bg-[#C9A840]" style={{ width: `${proj.progress}%` }} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
