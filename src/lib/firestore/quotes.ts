@@ -2,15 +2,11 @@ import {
   collection,
   doc,
   setDoc,
-  updateDoc,
   deleteDoc,
   getDocs,
   getDoc,
-  addDoc,
   query,
   orderBy,
-  onSnapshot,
-  type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Quote, Product } from "@/services/storageService";
@@ -22,13 +18,13 @@ const PRODUCTS_COL = "products";
 
 export async function getAllQuotesFromFirestore(): Promise<Quote[]> {
   const snap = await getDocs(query(collection(db, QUOTES_COL), orderBy("createdAt", "desc")));
-  return snap.docs.map((d) => ({ ...(d.data() as Omit<Quote, "id">), id: d.id }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote));
 }
 
 export async function getQuoteByIdFromFirestore(id: string): Promise<Quote> {
   const snap = await getDoc(doc(db, QUOTES_COL, id));
   if (!snap.exists()) throw new Error(`Quote ${id} not found`);
-  return { ...(snap.data() as Omit<Quote, "id">), id: snap.id };
+  return { id: snap.id, ...snap.data() } as Quote;
 }
 
 export async function saveQuoteToFirestore(quote: Quote): Promise<unknown> {
@@ -57,13 +53,13 @@ export async function duplicateQuoteInFirestore(id: string, newNumber: string | 
 
 export async function getAllProductsFromFirestore(): Promise<Product[]> {
   const snap = await getDocs(collection(db, PRODUCTS_COL));
-  return snap.docs.map((d) => ({ ...(d.data() as Omit<Product, "id">), id: d.id }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
 }
 
 export async function getProductByIdFromFirestore(id: string): Promise<Product> {
   const snap = await getDoc(doc(db, PRODUCTS_COL, id));
   if (!snap.exists()) throw new Error(`Product ${id} not found`);
-  return { ...(snap.data() as Omit<Product, "id">), id: snap.id };
+  return { id: snap.id, ...snap.data() } as Product;
 }
 
 export async function saveProductToFirestore(product: Product): Promise<unknown> {
