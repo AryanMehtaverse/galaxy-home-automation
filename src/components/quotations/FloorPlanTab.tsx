@@ -45,15 +45,28 @@ export function FloorPlanTab({
 
     setUploading(true)
     setError(null)
+
+    // 15 second timeout
+    const timeout = setTimeout(() => {
+      setUploading(false)
+      setError('Upload timed out. Check your Firebase Storage rules — authenticated users must have write access to the "floorPlans/" path.')
+    }, 15000)
+
     try {
       const storageRef = ref(storage, `floorPlans/${quoteId}/${Date.now()}-${file.name}`)
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
+      clearTimeout(timeout)
       onFloorPlanChange({ url, mimeType: file.type, fileName: file.name })
-      // Reset zones when new floor plan is uploaded
       onZonesChange([])
     } catch (e) {
-      setError(`Upload failed: ${String(e)}`)
+      clearTimeout(timeout)
+      const msg = String(e)
+      if (msg.includes('storage/unauthorized') || msg.includes('permission-denied')) {
+        setError('Storage permission denied. Go to Firebase Console → Storage → Rules and allow authenticated writes to "floorPlans/".')
+      } else {
+        setError(`Upload failed: ${msg}`)
+      }
     } finally {
       setUploading(false)
     }
