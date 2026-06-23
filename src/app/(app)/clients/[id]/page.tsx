@@ -303,7 +303,10 @@ export default function ClientDetailPage({ params }: PageProps) {
       <Section
         title={`Quotations (${quotes.length})`}
         action={
-          <Link href="/quotations" className="text-xs text-[#C9A840] hover:underline flex items-center gap-1">
+          <Link
+            href={`/quotations/new?leadId=${lead.id}&clientName=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone || '')}&email=${encodeURIComponent(lead.email || '')}&address=${encodeURIComponent(lead.address || '')}`}
+            className="text-xs text-[#C9A840] hover:underline flex items-center gap-1"
+          >
             New quote <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         }
