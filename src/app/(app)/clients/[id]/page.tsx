@@ -354,7 +354,7 @@ export default function ClientDetailPage({ params }: PageProps) {
             {linkedProjects.map(p => (
               <Link
                 key={p.id}
-                href={`/dashboard/${p.id}`}
+                href={`/projects/${p.id}`}
                 className="flex items-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800 px-4 py-3 hover:border-[#C9A840]/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all group"
               >
                 <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />

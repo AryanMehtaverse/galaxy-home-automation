@@ -118,7 +118,7 @@ export default function ClientsPage() {
 
   function handleClick(row: ClientRow) {
     if (row.kind === 'lead') router.push(`/clients/${row.id}`)
-    else router.push(`/dashboard/${row.projectId}`)
+    else router.push(`/projects/${row.projectId}`)
   }
 
   return (
