@@ -8,9 +8,11 @@ import type { Lead, CallLog } from "@/types/lead";
 import type { Quote, Product } from "@/services/storageService";
 
 const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+// Quotes and products were stored in a separate Firebase project
+const QUOTATION_DB_URL = "https://galaxy-quotation-default-rtdb.firebaseio.com";
 
-async function fetchFromRealtimeDB<T>(path: string): Promise<T[]> {
-  const res = await fetch(`${DB_URL}${path}.json`);
+async function fetchFromRealtimeDB<T>(path: string, baseUrl = DB_URL): Promise<T[]> {
+  const res = await fetch(`${baseUrl}${path}.json`);
   if (!res.ok) throw new Error(`Failed to fetch ${path}`);
   const data = await res.json();
   if (!data) return [];
@@ -74,10 +76,11 @@ function MigrateContent() {
     path: string,
     label: string,
     migrateFn: (item: T) => Promise<void>,
-    key: keyof Progress
+    key: keyof Progress,
+    baseUrl?: string
   ) => {
     addLog(`Fetching ${label} from Realtime Database…`);
-    const items = await fetchFromRealtimeDB<T>(path);
+    const items = await fetchFromRealtimeDB<T>(path, baseUrl);
     addLog(`Found ${items.length} ${label}.`);
 
     setProgress((p) => ({ ...p, [key]: { total: items.length, done: 0, errors: 0 } }));
@@ -108,9 +111,10 @@ function MigrateContent() {
         "/quotes",
         "quotes",
         (q) => migrateQuoteToFirestore(sanitizeForFirestore(q) as Quote),
-        "quotes"
+        "quotes",
+        QUOTATION_DB_URL
       );
-      await migrateCollection<Product>("/products", "products", migrateProductToFirestore, "products");
+      await migrateCollection<Product>("/products", "products", migrateProductToFirestore, "products", QUOTATION_DB_URL);
 
       addLog("🎉 Full migration complete! All data is now in Firestore.");
       setStatus("done");
