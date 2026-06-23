@@ -335,8 +335,7 @@ export default function ClientDetailPage({ params }: PageProps) {
       <Section
         title={`Quotations (${quotes.length})`}
         action={
-          <Link href={`/quotations/new?leadId=${lead.id}&clientName=${encodeURIComponent(lead.name)}&phone=${encodeURIComponent(lead.phone || '')}&email=${encodeURIComponent(lead.email || '')}&address=${encodeURIComponent(lead.address || '')}`}
-            className="flex items-center gap-1 text-xs text-[#C9A840] hover:underline">
+          <Link href="/quotations" className="flex items-center gap-1 text-xs text-[#C9A840] hover:underline">
             <Plus className="w-3.5 h-3.5" /> New Quote
           </Link>
         }
@@ -346,7 +345,7 @@ export default function ClientDetailPage({ params }: PageProps) {
         ) : (
           <div className="space-y-2">
             {quotes.map(q => (
-              <Link key={q.id} href={`/quotations/${q.id}`}
+              <Link key={q.id} href="/quotations"
                 className="flex items-center gap-3 rounded-xl border border-zinc-100 dark:border-zinc-800 px-4 py-3 hover:border-[#C9A840]/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all group">
                 <FileText className="w-4 h-4 text-zinc-400 shrink-0" />
                 <div className="flex-1 min-w-0">
