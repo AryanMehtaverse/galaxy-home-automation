@@ -6,6 +6,21 @@ export interface QuoteRoom {
   products: { productId: string; qty: number }[]
 }
 
+export interface FloorPlanData {
+  url: string
+  mimeType: string
+  fileName: string
+}
+
+export interface FloorPlanZone {
+  id: string
+  name: string
+  fill: string
+  stroke: string
+  points: { x: number; y: number }[]
+  products: { productId: string; qty: number }[]
+}
+
 export interface Quote {
   id: string
   number: string
@@ -21,6 +36,8 @@ export interface Quote {
   notes?: string
   rooms: QuoteRoom[]
   sectionDiscounts: Record<string, number>
+  floorPlan?: FloorPlanData | null
+  floorPlanZones?: FloorPlanZone[]
   createdAt: string
   updatedAt: string
 }

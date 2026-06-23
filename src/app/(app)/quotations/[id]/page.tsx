@@ -9,12 +9,15 @@ import { getAllProductsFromFirestore } from '@/lib/firestore/quotes'
 import { ClientDetailsForm } from '@/components/quotations/ClientDetailsForm'
 import { RoomsEditor } from '@/components/quotations/RoomsEditor'
 import { BOQView } from '@/components/quotations/BOQView'
+import { FloorPlanTab } from '@/components/quotations/FloorPlanTab'
 import { QuoteStatusBadge } from '@/components/quotations/QuoteStatusBadge'
 import { computePricing, formatCurrency } from '@/lib/pricingEngine'
-import type { Quote, CatalogProduct, QuoteRoom } from '@/types/quote'
+import type { Quote, CatalogProduct, QuoteRoom, FloorPlanData, FloorPlanZone } from '@/types/quote'
+import type { Zone } from '@/components/quotations/FloorPlanCanvas'
 
 const TABS = [
   { id: 'client', label: 'Client Details' },
+  { id: 'floorplan', label: 'Floor Plan' },
   { id: 'rooms', label: 'Rooms & Products' },
   { id: 'boq', label: 'BOQ' },
   { id: 'summary', label: 'Summary' },
@@ -131,6 +134,19 @@ export default function QuoteEditorPage({ params }: { params: Promise<{ id: stri
       <div className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
         {activeTab === 'client' && (
           <ClientDetailsForm quote={quote} onChange={setQuote} />
+        )}
+
+        {activeTab === 'floorplan' && (
+          <FloorPlanTab
+            quoteId={id}
+            floorPlan={quote.floorPlan as FloorPlanData | null}
+            floorPlanZones={quote.floorPlanZones as Zone[] | undefined}
+            rooms={quote.rooms ?? []}
+            products={products}
+            onFloorPlanChange={(fp) => setQuote((q) => ({ ...q, floorPlan: fp }))}
+            onZonesChange={(zones) => setQuote((q) => ({ ...q, floorPlanZones: zones as FloorPlanZone[] }))}
+            onRoomsChange={(rooms) => setQuote((q) => ({ ...q, rooms }))}
+          />
         )}
 
         {activeTab === 'rooms' && (
