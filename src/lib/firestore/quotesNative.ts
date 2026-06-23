@@ -38,15 +38,16 @@ export async function getNextQuoteNumber(): Promise<string> {
 // ── Quotes ────────────────────────────────────────────────────────────────────
 
 export function subscribeToQuotes(callback: (quotes: Quote[]) => void): Unsubscribe {
-  const q = query(collection(db, QUOTES_COL), orderBy('createdAt', 'desc'))
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote)))
+  return onSnapshot(collection(db, QUOTES_COL), (snap) => {
+    const results = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote))
+    callback(results.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1)))
   })
 }
 
 export async function getAllQuotesNative(): Promise<Quote[]> {
-  const snap = await getDocs(query(collection(db, QUOTES_COL), orderBy('createdAt', 'desc')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote))
+  const snap = await getDocs(collection(db, QUOTES_COL))
+  const results = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote))
+  return results.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
 }
 
 export async function getQuotesByLeadId(leadId: string): Promise<Quote[]> {
