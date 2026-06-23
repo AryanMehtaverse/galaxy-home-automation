@@ -1,38 +1,26 @@
 import type { Lead, CallLog } from '@/types/lead'
 import { auth } from '@/lib/firebase'
+import {
+  fetchLeadsFromFirestore,
+  createLeadInFirestore,
+  updateLeadInFirestore,
+  fetchCallLogsFromFirestore,
+  createCallLogInFirestore,
+  deleteCallLogFromFirestore,
+} from '@/lib/firestore/leads'
 
-const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-
-function dbUrl(path: string) {
-  return `${DB_URL}${path}`
-}
+// ── Leads ────────────────────────────────────────────────────────────────────
 
 export async function fetchLeads(): Promise<Lead[]> {
-  const res = await fetch(dbUrl('/leads.json'))
-  if (!res.ok) throw new Error('Failed to fetch leads')
-  const data = await res.json()
-  if (!data) return []
-  return Object.entries(data).map(([id, val]) => ({ ...(val as Omit<Lead, 'id'>), id }))
+  return fetchLeadsFromFirestore()
 }
 
 export async function createLead(data: Omit<Lead, 'id'>): Promise<Lead> {
-  const res = await fetch(dbUrl('/leads.json'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Failed to create lead')
-  const { name: id } = await res.json()
-  return { ...data, id }
+  return createLeadInFirestore(data)
 }
 
 export async function updateLead(id: string, updates: Partial<Lead>): Promise<void> {
-  const res = await fetch(dbUrl(`/leads/${id}.json`), {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
-  })
-  if (!res.ok) throw new Error('Failed to update lead')
+  return updateLeadInFirestore(id, updates)
 }
 
 export async function deleteLead(id: string): Promise<void> {
@@ -46,37 +34,16 @@ export async function deleteLead(id: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete lead')
 }
 
+// ── Call Logs ─────────────────────────────────────────────────────────────────
+
 export async function fetchCallLogs(leadId?: string): Promise<CallLog[]> {
-  const res = await fetch(dbUrl('/callLogs.json'))
-  if (!res.ok) throw new Error('Failed to fetch call logs')
-  const data = await res.json()
-  if (!data) return []
-  const logs: CallLog[] = Object.entries(data).map(([id, val]) => ({
-    ...(val as Omit<CallLog, 'id'>),
-    id,
-  }))
-  if (leadId) return logs.filter((l) => l.leadId === leadId)
-  return logs
+  return fetchCallLogsFromFirestore(leadId)
 }
 
 export async function createCallLog(data: Omit<CallLog, 'id'>): Promise<CallLog> {
-  const res = await fetch(dbUrl('/callLogs.json'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Failed to create call log')
-  const { name: id } = await res.json()
-  return { ...data, id }
+  return createCallLogInFirestore(data)
 }
 
 export async function deleteCallLog(id: string): Promise<void> {
-  const token = await auth.currentUser?.getIdToken()
-  if (!token) throw new Error('Not authenticated')
-  const res = await fetch(`/api/call-logs/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (res.status === 403) throw new Error('Permission denied')
-  if (!res.ok) throw new Error('Failed to delete call log')
+  return deleteCallLogFromFirestore(id)
 }

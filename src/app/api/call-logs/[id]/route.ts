@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase-admin";
 
-const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
-
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -39,10 +37,7 @@ export async function DELETE(
     );
   }
 
-  const res = await fetch(`${DB_URL}/callLogs/${id}.json`, { method: "DELETE" });
-  if (!res.ok) {
-    return NextResponse.json({ error: "Failed to delete call log" }, { status: 502 });
-  }
+  await adminDb.collection("callLogs").doc(id).delete();
 
   return NextResponse.json({ success: true });
 }

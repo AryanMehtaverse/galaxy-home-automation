@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
 import { adminDb } from "@/lib/firebase-admin";
 
-const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
-
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -33,10 +31,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden: admin or owner role required" }, { status: 403 });
   }
 
-  const res = await fetch(`${DB_URL}/leads/${id}.json`, { method: "DELETE" });
-  if (!res.ok) {
-    return NextResponse.json({ error: "Failed to delete lead" }, { status: 502 });
-  }
+  await adminDb.collection("leads").doc(id).delete();
 
   return NextResponse.json({ success: true });
 }
