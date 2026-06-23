@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { subscribeToUsers, updateUserProfile, type ManagedUser } from "@/lib/firestore/users";
 import { exportAllData, downloadJSON, downloadCSV } from "@/lib/exportService";
@@ -226,6 +227,12 @@ function UserManagementContent() {
           >
             {exporting ? "Exporting…" : "⬇ CSV Sheets"}
           </button>
+          <Link
+            href="/user-management/migrate"
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            🔄 DB Migration
+          </Link>
         </div>
       </div>
 
