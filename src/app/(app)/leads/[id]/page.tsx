@@ -51,16 +51,10 @@ export default function LeadDetailPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const [leads, logs, q, p] = await Promise.all([
-        fetchLeads(),
-        fetchCallLogs(id),
-        getQuotesByLeadId(id),
-        getAllProductsFromFirestore(),
-      ])
+      const [leads, logs] = await Promise.all([fetchLeads(), fetchCallLogs(id)])
       let found = leads.find((l) => l.id === id)
       let foundLogs = logs
 
-      // Fallback to sample data
       if (!found) {
         found = SAMPLE_LEADS.find((l) => l.id === id)
         foundLogs = SAMPLE_CALL_LOGS.filter((l) => l.leadId === id)
@@ -68,10 +62,16 @@ export default function LeadDetailPage() {
 
       setLead(found ?? null)
       setCallLogs(foundLogs.sort((a, b) => (b.date > a.date ? 1 : -1)))
-      setQuotes(q)
-      setProducts(p as CatalogProduct[])
+
+      // Load quotes and products separately — don't let failures here break the lead view
+      try {
+        const [q, p] = await Promise.all([getQuotesByLeadId(id), getAllProductsFromFirestore()])
+        setQuotes(q)
+        setProducts(p as CatalogProduct[])
+      } catch {
+        // quotes section will just show empty
+      }
     } catch {
-      // fallback to sample
       const found = SAMPLE_LEADS.find((l) => l.id === id) ?? null
       const foundLogs = SAMPLE_CALL_LOGS.filter((l) => l.leadId === id)
       setLead(found)

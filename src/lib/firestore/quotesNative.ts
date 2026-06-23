@@ -51,9 +51,10 @@ export async function getAllQuotesNative(): Promise<Quote[]> {
 
 export async function getQuotesByLeadId(leadId: string): Promise<Quote[]> {
   const snap = await getDocs(
-    query(collection(db, QUOTES_COL), where('leadId', '==', leadId), orderBy('createdAt', 'desc'))
+    query(collection(db, QUOTES_COL), where('leadId', '==', leadId))
   )
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote))
+  const results = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Quote))
+  return results.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
 }
 
 export async function getQuoteNative(id: string): Promise<Quote | null> {
