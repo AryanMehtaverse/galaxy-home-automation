@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { subscribeToUsers, updateUserProfile, type ManagedUser } from "@/lib/firestore/users";
+import { exportAllData, downloadJSON, downloadCSV } from "@/lib/exportService";
 import type { AppRole } from "@/types/auth";
 
 const ALL_ROLES: AppRole[] = ["admin", "owner", "project_manager", "bd_team", "site_manager", "field_team", "site_worker", "accounts", "clerk", "unassigned"];
@@ -161,6 +162,34 @@ function UserManagementContent() {
     await updateUserProfile(uid, data);
   };
 
+  const [exporting, setExporting] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
+
+  const handleExport = async (format: "json" | "csv") => {
+    setExporting(true);
+    try {
+      const result = await exportAllData();
+      const date = new Date().toISOString().split("T")[0];
+      if (format === "json") {
+        downloadJSON(result, `galaxy-backup-${date}.json`);
+      } else {
+        const { data } = result;
+        Object.entries(data).forEach(([key, rows]) => {
+          if ((rows as unknown[]).length > 0) {
+            downloadCSV(rows as unknown[], `galaxy-${key}-${date}.csv`);
+          }
+        });
+      }
+      setExportDone(true);
+      setTimeout(() => setExportDone(false), 3000);
+    } catch (e) {
+      console.error(e);
+      alert("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const formatDate = (d: Date | null) => {
     if (!d) return "Never";
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -176,9 +205,28 @@ function UserManagementContent() {
         />
       )}
 
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">User Management</h1>
-        <p className="text-sm text-zinc-500 mt-1">{users.length} users registered</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">User Management</h1>
+          <p className="text-sm text-zinc-500 mt-1">{users.length} users registered</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-400 hidden sm:block">Export all data:</span>
+          <button
+            onClick={() => handleExport("json")}
+            disabled={exporting}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+          >
+            {exporting ? "Exporting…" : exportDone ? "✓ Done" : "⬇ JSON Backup"}
+          </button>
+          <button
+            onClick={() => handleExport("csv")}
+            disabled={exporting}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+          >
+            {exporting ? "Exporting…" : "⬇ CSV Sheets"}
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
