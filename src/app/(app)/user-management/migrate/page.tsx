@@ -17,21 +17,19 @@ async function fetchFromRealtimeDB<T>(path: string): Promise<T[]> {
   return Object.entries(data).map(([id, val]) => ({ ...(val as object), id })) as T[];
 }
 
-// Recursively strip values Firestore can't store: undefined, File, Blob, functions
+// Strip anything Firestore can't store by doing a JSON round-trip,
+// then removing floorPlan which may contain embedded file data.
 function sanitizeForFirestore(val: unknown): unknown {
-  if (val === undefined || val === null) return null;
-  if (typeof val === "function") return null;
-  if (val instanceof File || val instanceof Blob) return null;
-  if (Array.isArray(val)) return val.map(sanitizeForFirestore).filter((v) => v !== undefined);
-  if (typeof val === "object") {
-    const result: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
-      const cleaned = sanitizeForFirestore(v);
-      if (cleaned !== undefined) result[k] = cleaned;
+  try {
+    const clean = JSON.parse(JSON.stringify(val));
+    if (clean && typeof clean === "object" && !Array.isArray(clean)) {
+      // floorPlan often stores File/Blob data that Firestore rejects
+      delete (clean as Record<string, unknown>).floorPlan;
     }
-    return result;
+    return clean;
+  } catch {
+    return val;
   }
-  return val;
 }
 
 type MigrationStatus = "idle" | "running" | "done" | "error";
