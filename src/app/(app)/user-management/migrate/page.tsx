@@ -17,6 +17,23 @@ async function fetchFromRealtimeDB<T>(path: string): Promise<T[]> {
   return Object.entries(data).map(([id, val]) => ({ ...(val as object), id })) as T[];
 }
 
+// Recursively strip values Firestore can't store: undefined, File, Blob, functions
+function sanitizeForFirestore(val: unknown): unknown {
+  if (val === undefined || val === null) return null;
+  if (typeof val === "function") return null;
+  if (val instanceof File || val instanceof Blob) return null;
+  if (Array.isArray(val)) return val.map(sanitizeForFirestore).filter((v) => v !== undefined);
+  if (typeof val === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      const cleaned = sanitizeForFirestore(v);
+      if (cleaned !== undefined) result[k] = cleaned;
+    }
+    return result;
+  }
+  return val;
+}
+
 type MigrationStatus = "idle" | "running" | "done" | "error";
 
 interface CollectionProgress {
@@ -89,7 +106,12 @@ function MigrateContent() {
     try {
       await migrateCollection<Lead>("/leads", "leads", migrateLeadToFirestore, "leads");
       await migrateCollection<CallLog>("/callLogs", "call logs", migrateCallLogToFirestore, "callLogs");
-      await migrateCollection<Quote>("/quotes", "quotes", migrateQuoteToFirestore, "quotes");
+      await migrateCollection<Quote>(
+        "/quotes",
+        "quotes",
+        (q) => migrateQuoteToFirestore(sanitizeForFirestore(q) as Quote),
+        "quotes"
+      );
       await migrateCollection<Product>("/products", "products", migrateProductToFirestore, "products");
 
       addLog("🎉 Full migration complete! All data is now in Firestore.");
